@@ -86,6 +86,72 @@
   .hist .d{color:var(--muted);font-size:.78rem;flex:none}
   .empty{color:var(--muted);font-size:.9rem}
   footer{color:#6c7386;font-size:.78rem;text-align:center;margin-top:18px;line-height:1.5}
+  /* ---- Mode switch ---- */
+  .modes{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:5px;margin-bottom:14px}
+  .mode{background:transparent;font-weight:600;font-size:.95rem;padding:10px 6px}
+  .mode[aria-pressed="true"]{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0d0f14}
+  [hidden]{display:none !important}
+  /* ---- Conversation ---- */
+  .personas{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+  .persona{border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 6px;font-size:.9rem}
+  .persona b{font-size:1.5rem;line-height:1.2}
+  .persona small{color:var(--muted);font-size:.75rem}
+  .persona[aria-pressed="true"]{border-color:var(--accent);background:#22314d}
+  .persona[aria-pressed="true"] small{color:#cfe0ff}
+  .bio{color:var(--muted);font-size:.9rem;margin:0 0 12px}
+  .chat-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .chat-head h2{margin:0;flex:1;min-width:0;text-transform:none;letter-spacing:0;font-size:.95rem;color:var(--text)}
+  .iconbtn{padding:6px 10px;font-size:1rem;border:1px solid var(--line);background:transparent}
+  .endbtn{padding:6px 12px;font-size:.85rem;background:#3a2328;color:#ffc4cc;border:1px solid #6a2b36}
+  .mood{font-size:.82rem;color:#7ee2a8;margin:0 0 8px}
+  .mood.meh{color:var(--ok)}
+  .chatlog{display:flex;flex-direction:column;gap:8px;max-height:50vh;min-height:220px;overflow-y:auto;padding:8px;
+    background:var(--bg);border:1px solid var(--line);border-radius:12px;scroll-behavior:smooth}
+  .msg{max-width:86%;display:flex;flex-direction:column}
+  .msg .txt{padding:9px 12px;border-radius:16px;line-height:1.4;white-space:pre-wrap;word-wrap:break-word}
+  .msg .who{font-size:.72rem;color:var(--muted);margin:0 0 2px 6px}
+  .msg.them{align-self:flex-start}
+  .msg.them .txt{background:var(--card2);border-bottom-left-radius:4px}
+  .msg.me{align-self:flex-end;align-items:flex-end}
+  .msg.me .txt{background:#2b4c80;border-bottom-right-radius:4px}
+  .msg.live .txt{background:transparent;border:1px dashed #4a6fa8;color:#c9d6ee}
+  .msg.typing .txt span{display:inline-block;width:7px;height:7px;margin:0 2px;border-radius:50%;background:var(--muted);animation:blink 1.2s infinite}
+  .msg.typing .txt span:nth-child(2){animation-delay:.2s}.msg.typing .txt span:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+  .vline{font-size:.78rem;margin-top:4px;padding:3px 9px;border-radius:999px;text-align:right}
+  .vline.good{color:#7ee2a8;background:rgba(76,211,138,.1)}
+  .vline.warn{color:#ffc56b;background:rgba(255,181,71,.1)}
+  .vline.tip2{color:#a9c8ff;background:rgba(110,168,255,.1)}
+  .coach{margin-top:10px;background:var(--card2);border-radius:12px;padding:8px 10px}
+  .coach-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px;font-weight:600}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;min-height:28px}
+  .chip{font-size:.8rem;padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--card)}
+  .chip.good{color:#7ee2a8;border-color:rgba(76,211,138,.45);background:rgba(76,211,138,.1)}
+  .chip.warn{color:#ffc56b;border-color:rgba(255,181,71,.45);background:rgba(255,181,71,.1)}
+  .chatbar{display:flex;align-items:center;gap:10px;margin-top:12px}
+  .cmic{width:76px;height:76px;border-radius:50%;flex:none;font-weight:700;font-size:.9rem;padding:0;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0d0f14}
+  .cmic.rec{background:var(--bad);color:#fff;animation:pulse 1.4s infinite}
+  .cmic:disabled,.chatbar button:disabled,#cSend:disabled{opacity:.4;cursor:not-allowed;animation:none}
+  .chatbar .mid{flex:1;min-width:0}
+  .chatbar .timer{font-size:1.1rem}
+  .chatbar .status{text-align:left;font-size:.85rem}
+  .cform{display:flex;gap:8px;margin-top:10px}
+  .cform input{flex:1;min-width:0;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:11px 12px;font:inherit}
+  .opts{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:10px;font-size:.82rem;color:var(--muted)}
+  .opts label{display:flex;align-items:center;gap:6px;cursor:pointer}
+  ul.plain{list-style:none;padding:0;margin:6px 0 12px}
+  ul.plain li{padding:8px 10px;border-radius:10px;background:var(--card2);margin-bottom:6px;font-size:.92rem}
+  ul.best li::before{content:"⭐ "} ul.work li::before{content:"👉 "}
+  details.settings summary{cursor:pointer;color:var(--muted);font-size:.9rem;font-weight:600;list-style:none}
+  details.settings summary::-webkit-details-marker{display:none}
+  details.settings summary::before{content:"⚙️ "}
+  .settings .body{margin-top:10px;font-size:.88rem;color:var(--muted)}
+  .settings input[type=password]{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;margin:6px 0}
+  .gstatus{font-weight:600;color:var(--text);margin:4px 0 8px}
+  .gstatus.on{color:#7ee2a8}
+  .small{font-size:.8rem;color:var(--muted)}
+  a{color:var(--accent)}
   @media (min-width:700px){ .prompt{font-size:1.55rem} .mic{width:132px;height:132px} }
 </style>
 </head>
@@ -94,7 +160,7 @@
   <header>
     <div>
       <h1>Charisma <span>Practice</span></h1>
-      <p class="sub">Answer out loud. Get instant feedback. Free.</p>
+      <p class="sub">Practise talking. Get instant feedback. Free.</p>
     </div>
     <label><span class="sr" style="position:absolute;left:-9999px">Voice language</span>
       <select id="lang" title="Speech language">
@@ -105,6 +171,12 @@
       </select>
     </label>
   </header>
+  <div class="modes" role="group" aria-label="Mode">
+    <button class="mode" data-mode="quick" aria-pressed="true">🎯 Quick practice</button>
+    <button class="mode" data-mode="chat" aria-pressed="false">💬 Conversation</button>
+  </div>
+
+  <div id="quickSection">
 
   <!-- 1. Scenario -->
   <section class="card" aria-labelledby="h-scn">
@@ -163,6 +235,93 @@
     </div>
   </section>
 
+  </div><!-- /quickSection -->
+
+  <!-- ===================== Conversation mode ===================== -->
+  <div id="convSection" hidden>
+    <section class="card" id="pickCard" aria-labelledby="h-pick">
+      <h2 id="h-pick">Conversation mode · Pick who to talk to</h2>
+      <div class="personas" role="group" aria-label="Partner">
+        <button class="persona" data-p="date" aria-pressed="true"><b>☕</b>First date<small>Sophie</small></button>
+        <button class="persona" data-p="party" aria-pressed="false"><b>🎉</b>Party<small>Max</small></button>
+        <button class="persona" data-p="interview" aria-pressed="false"><b>💼</b>Interview<small>Ellen</small></button>
+      </div>
+      <p class="bio" id="personaBio"></p>
+      <p class="small" style="margin:0 0 12px">They talk, you answer out loud (or type). A coach tells you live what's going well and what to fix. Keep the chat going, ask questions back, then tap End to get your score.</p>
+      <div class="row"><button class="btn-primary" id="startChat">Start conversation</button></div>
+    </section>
+
+    <section class="card" id="chatCard" hidden aria-labelledby="chatTitle">
+      <div class="chat-head">
+        <h2 id="chatTitle">Conversation</h2>
+        <button class="iconbtn" id="muteBtn" title="Voice on" aria-label="Partner voice on or off">🔊</button>
+        <button class="endbtn" id="endChat">End</button>
+      </div>
+      <p class="mood" id="mood"></p>
+      <div id="cNotice" class="notice" hidden></div>
+      <div id="gNotice" class="notice" hidden></div>
+      <div class="chatlog" id="chatLog" aria-live="polite"></div>
+      <div class="coach" aria-live="polite">
+        <div class="coach-title">Live coach</div>
+        <div class="chips" id="coachChips"></div>
+      </div>
+      <div class="chatbar">
+        <button class="cmic" id="cMic">🎤 Talk</button>
+        <div class="mid">
+          <div class="timer" id="cTimer">0:00</div>
+          <div class="status" id="cStatus"></div>
+        </div>
+        <button class="btn-ghost" id="cDone" disabled>Done ✓</button>
+      </div>
+      <form class="cform" id="cForm" autocomplete="off">
+        <input id="cInput" type="text" placeholder="…or type your answer" enterkeyhint="send" aria-label="Type your answer">
+        <button class="btn-primary" id="cSend" type="submit">Send</button>
+      </form>
+      <div class="opts" id="hfRow">
+        <label><input type="checkbox" id="hfBox"> Listen automatically after they talk</label>
+        <label><input type="checkbox" id="asBox"> Send after a short pause</label>
+      </div>
+    </section>
+
+    <section class="card" id="convSummary" hidden aria-labelledby="h-sum">
+      <h2 id="h-sum">Conversation summary</h2>
+      <div class="score-head">
+        <div class="ring" id="cRing"><div><span id="cScore">0</span><small>/100</small></div></div>
+        <div>
+          <div class="verdict" id="cVerdict"></div>
+          <div class="meta" id="cMeta"></div>
+        </div>
+      </div>
+      <h2>Best moments</h2>
+      <ul class="plain best" id="cBest"></ul>
+      <h2>Work on next time</h2>
+      <ul class="plain work" id="cWork"></ul>
+      <div class="row">
+        <button class="btn-ghost" id="newChat">Pick another partner</button>
+        <button class="btn-primary" id="againChat">↻ Talk again</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <details class="settings">
+        <summary>Settings: smarter replies (optional)</summary>
+        <div class="body">
+          <p class="gstatus" id="gStatus"></p>
+          <p style="margin:0 0 6px">The free built-in replies work without anything. If you want more natural replies, you can paste your own free Google Gemini API key (get one at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com</a>).</p>
+          <p style="margin:0 0 6px">🔒 Your key is saved only in this browser on this device. It is never sent anywhere except Google's Gemini API. When it's on, your chat messages are sent to Google to make the replies. If it fails, the app goes back to the free replies.</p>
+          <input type="password" id="gKey" placeholder="Paste your Gemini API key" autocomplete="off" spellcheck="false">
+          <div class="row" style="align-items:center">
+            <label class="small" style="flex:0 0 auto">Model
+              <select id="gModel"></select>
+            </label>
+            <button class="btn-primary" id="gSave" style="flex:0 0 auto">Save</button>
+            <button class="btn-ghost" id="gRemove" style="flex:0 0 auto" hidden>Remove key</button>
+          </div>
+        </div>
+      </details>
+    </section>
+  </div><!-- /convSection -->
+
   <!-- 4. Progress -->
   <section class="card" aria-labelledby="h-prog">
     <h2 id="h-prog">Your progress</h2>
@@ -180,6 +339,7 @@
   <footer>
     Free, no account, no tracking. Your history is saved only on this device.<br>
     Voice-to-text uses your browser's built-in speech service (in Chrome this may be processed by Google).<br>
+    Partners and companies in Conversation mode are made up.<br>
     Scores are simple rule-based hints, not a judgement of you. Keep practising!
   </footer>
 </div>
@@ -301,7 +461,8 @@
 
     // --- Pace (20) — spoken only
     var wpm = typed ? null : Math.round(n / (secs / 60));
-    if (!typed) {
+    if (!typed && input.chat && secs < 5) wpm = null; // too short to judge pace
+    if (wpm !== null) {
       var ps, pm;
       if (wpm >= 120 && wpm <= 160) { ps = 20; pm = "Great pace: " + wpm + " words per minute — easy to follow."; }
       else if (wpm > 160 && wpm <= 185) { ps = 14; pm = "A little fast (" + wpm + " words/min). Aim for 120–160 so people can keep up."; }
@@ -352,7 +513,14 @@
     // --- Length (10)
     var ls, lm, s = Math.round(secs);
     var lenTxt = typed ? "about " + s + "s if spoken" : s + "s";
-    if (secs < 8) { ls = 1; lm = "Very short (" + lenTxt + "). Give people more to work with."; }
+    if (input.chat) {
+      if (secs < 3) { ls = 2; lm = "Very short (" + lenTxt + "). Add a bit more so they have something to work with."; }
+      else if (secs < 6) { ls = 6; lm = "Short (" + lenTxt + "). One more detail would help."; }
+      else if (secs <= 60) { ls = 10; lm = "Good length for a chat (" + lenTxt + ")."; }
+      else if (secs <= 90) { ls = 6; lm = "Long turn (" + lenTxt + "). Pass the ball back a bit sooner."; }
+      else { ls = 3; lm = "Very long turn (" + lenTxt + "). Keep it under a minute, then hand over."; }
+    }
+    else if (secs < 8) { ls = 1; lm = "Very short (" + lenTxt + "). Give people more to work with."; }
     else if (secs < 15) { ls = 4; lm = "A bit short (" + lenTxt + "). Add one example or detail."; }
     else if (secs <= 90) { ls = 10; lm = "Good length (" + lenTxt + ")."; }
     else if (secs <= 120) { ls = 6; lm = "A bit long (" + lenTxt + "). Keep social answers under about 90 seconds."; }
@@ -360,14 +528,16 @@
     comps.push({ key: "length", label: "Length", got: ls, max: 10, msg: lm });
 
     // --- Social: ask back (10) / Interview: show a result (10)
-    if (cat === "interview") {
+    if (cat === "interview" && input.noResultCheck) {
+      // not a story question: no result needed
+    } else if (cat === "interview") {
       var hasRes = RESULT_RE.test(lower);
       comps.push({ key: "result", label: "Result", got: hasRes ? 10 : 3, max: 10,
         msg: hasRes ? "You talked about a result or what you learned — interviewers love that."
                     : "No clear result. End with what happened because of you (a number if possible)." });
-    } else {
+    } else if (!input.noQuestionCheck) {
       var asked = /\?/.test(text) || QUESTION_RE.test(lower);
-      comps.push({ key: "askback", label: "Asked back", got: asked ? 10 : 2, max: 10,
+      comps.push({ key: "askback", label: "Asked back", got: asked ? 10 : (input.chat ? 5 : 2), max: 10,
         msg: asked ? "You asked a question back — that keeps the conversation flowing."
                    : "You didn't ask anything back. End with a question so it's a conversation, not an interview." });
     }
@@ -375,7 +545,7 @@
     var got = 0, max = 0;
     comps.forEach(function (c) { got += c.got; max += c.max; });
     var total = Math.round((got / max) * 100);
-    if (n < 15) total = Math.min(total, 55); // a one-liner can't score high
+    if (n < (input.chat ? 6 : 15)) total = Math.min(total, 55); // a one-liner can't score high
     // "Excellent" (85+) requires no badly weak area
     if (comps.some(function (c) { return c.got / c.max < 0.4; })) total = Math.min(total, 84);
 
@@ -425,10 +595,735 @@
              feedbackItems: lines, tip: tip, verdict: verdict };
   }
 
-  var api = { score: score, findMarks: findMarks, words: words };
+  // Raw detail signals (used by the live coach and conversation engine)
+  function signals(raw) {
+    var text = norm(raw), lower = text.toLowerCase();
+    return {
+      nums: countMatches(/\b\d+(?:[.,]\d+)?\b/g, text) + countMatches(NUMBER_WORDS, lower),
+      props: properNouns(raw),
+      examples: countMatches(EXAMPLE_RE, lower),
+      story: countMatches(STORY_RE, lower),
+      question: /\?/.test(text) || QUESTION_RE.test(lower),
+      result: RESULT_RE.test(lower)
+    };
+  }
+
+  var api = { score: score, findMarks: findMarks, words: words, signals: signals };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.CharismaScore = api;
-})(this);
+})(typeof window !== "undefined" ? window : globalThis);
+</script>
+
+<!-- ===================== Conversation engine (pure, testable) ===================== -->
+<script id="engine">
+(function (root) {
+  "use strict";
+  var S = root.CharismaScore;
+
+  // ---------------- Personas ----------------
+  var PERSONAS = {
+    date: {
+      id: "date", kind: "social", category: "date", name: "Sophie", emoji: "☕", title: "First date", voice: "female",
+      bio: "29, graphic designer in Utrecht. Loves bouldering, cooking Thai food and old vinyl records. Has a cat called Pixel.",
+      scene: "a first date at a cosy café in Utrecht",
+      opener: ["Hi! It's so nice to finally meet you in person. So... how's your day been so far?",
+               "Hey, you made it! Nice to finally meet you. How has your day been?"],
+      agenda: ["hobbies", "work", "travel", "food", "weekend", "music", "goals", "family", "movies", "pets"],
+      answers: {
+        name: ["I'm Sophie! Soph for my friends."],
+        age: ["I'm 29. Thirty next spring, which is a bit scary!"],
+        day: ["Pretty good actually! I had a long design meeting this morning, so I treated myself to a cinnamon bun after.",
+              "Busy but nice. I finally finished a poster design I've been stuck on all week."],
+        work: ["I'm a graphic designer at a small studio in Utrecht. Mostly posters and logos for cafés and festivals.",
+               "I design logos and posters. My favourite project was a poster for a little jazz festival last summer."],
+        study: ["I studied graphic design at the art academy in Groningen. Four years of coffee and deadlines!"],
+        hobbies: ["I go bouldering about twice a week, and I collect old vinyl records. I found a 1970s soul record for two euros last month!",
+                  "Climbing, cooking and digging through record shops. Pretty nerdy, I know."],
+        sport: ["Bouldering! I go twice a week with a friend. I'm still terrible at overhangs, but I love it."],
+        travel: ["Last year I backpacked through Vietnam for three weeks. The food in Hoi An was unreal. Next on my list is Japan.",
+                 "Vietnam was my favourite trip so far, and I really want to see Japan in autumn."],
+        food: ["I'm a bit obsessed with Thai food. I make a pretty good green curry, if I say so myself!",
+               "Anything spicy. And I can never say no to a good cinnamon bun."],
+        music: ["Mostly indie and old soul records. Sunday mornings are for vinyl and coffee.",
+                "Lots of indie. I go to small concerts at TivoliVredenburg whenever I can."],
+        movies: ["I love Studio Ghibli films. And I just finished a Danish crime series. So dark, but so good.",
+                 "Anything by Studio Ghibli. Spirited Away is my comfort movie."],
+        family: ["I have an older brother who lives in Berlin, and my parents still live in Groningen. We're pretty close."],
+        pets: ["I have a cat called Pixel. She's grey, very dramatic, and she sleeps on my keyboard."],
+        weekend: ["Saturday mornings I go to the market, then usually climbing. Sundays are lazy.",
+                  "Usually the market, a bit of climbing and cooking something new. Very wild life, haha."],
+        city: ["I live in Utrecht now, but I grew up in Groningen. I moved here five years ago for work.",
+               "Groningen originally! Utrecht has been home for five years now."],
+        goals: ["One day I want to start my own little design studio. Maybe with a shop that sells prints and records.",
+                "I'd love to have my own studio. And climb outdoors in France, that's on my bucket list."],
+        host: ["We matched on the app, remember? Haha."],
+        general: ["Hmm, good question! I'd say I'm pretty curious. I love trying new things.",
+                  "Ooh, I have to think about that one. I'm quite easy-going, honestly."]
+      }
+    },
+    party: {
+      id: "party", kind: "social", category: "party", name: "Max", emoji: "🎉", title: "Party small talk", voice: "male",
+      bio: "34, sound engineer at a theatre in Amsterdam. Cycles everywhere, brews his own beer, has a dog called Bram. Knows the host, Lisa, from university.",
+      scene: "a friend's birthday party at Lisa's flat in Amsterdam",
+      opener: ["Hey! I don't think we've met yet. I'm Max. How do you know Lisa?",
+               "Hi! I'm Max, nice to meet you. So how do you know Lisa?"],
+      agenda: ["work", "city", "weekend", "travel", "music", "sport", "food", "hobbies", "goals", "pets"],
+      answers: {
+        name: ["I'm Max! Like the Max Verstappen, but slower. Much slower."],
+        age: ["Thirty-four. Old enough to leave parties before midnight, haha."],
+        day: ["Good! I slept in, then fixed my bike, so I'm feeling productive."],
+        work: ["I'm a sound engineer at a theatre in Amsterdam. I make sure the actors can be heard and nothing squeaks.",
+               "I do the sound at a theatre. Last week a microphone died in the middle of a musical. Very stressful!"],
+        study: ["I studied music technology in Hilversum. Lots of cables and very little sleep."],
+        hobbies: ["I brew my own beer at home. My last batch was a honey beer, and it was actually drinkable!",
+                  "Board games and home brewing. I'm a real nerd, I know."],
+        sport: ["I cycle everywhere, and I play football with some friends every Sunday. We lose a lot.",
+                "I'm training for my first marathon next year. Right now I can do about fifteen kilometres."],
+        travel: ["Last summer I did a road trip through Portugal with two friends. Lisbon was amazing.",
+                 "I loved Portugal. The surf towns in the south were the best part."],
+        food: ["Indonesian food, no doubt. A good rendang makes me very happy.",
+               "I'm a big fan of Indonesian food. There's a great place in De Pijp."],
+        music: ["A strange mix of jazz and techno. Depends on the day!",
+                "Jazz on Sunday, techno on Saturday. I went to Dekmantel festival this summer."],
+        movies: ["I'm into sci-fi series. I just started watching one about a space station, it's great."],
+        family: ["I have two younger sisters. One of them is here somewhere, actually!"],
+        pets: ["I have a dog called Bram. He's a very lazy labrador who loves cheese."],
+        weekend: ["Football on Sunday, and probably a long walk with Bram. Nothing crazy.",
+                  "Sunday football with friends, and hopefully some sleep!"],
+        city: ["I grew up in Rotterdam, but I've lived in Amsterdam for about ten years now.",
+               "Rotterdam originally. Don't tell anyone here, haha."],
+        goals: ["Run that marathon next year. And maybe open a tiny brewery one day.",
+                "My big goal is the Rotterdam marathon next spring."],
+        host: ["Lisa and I studied together in Hilversum. We've been friends for over ten years."],
+        general: ["Ha, good question. I'm pretty relaxed, I just like good people and good food.",
+                  "Hmm, let me think... I'm the guy who always brings a board game, haha."]
+      }
+    },
+    interview: {
+      id: "interview", kind: "interview", category: "interview", name: "Ellen", emoji: "💼", title: "Job interview", voice: "female",
+      bio: "Hiring manager at Northwind Logistics (a made-up company). Leads a team of eight. Friendly, but wants real examples.",
+      scene: "a job interview for an Operations Coordinator role at Northwind Logistics, a made-up logistics company in Rotterdam",
+      opener: ["Hi, thanks for coming in today. I'm Ellen, I lead the operations team here at Northwind. Let's start easy: tell me a bit about yourself."],
+      agenda: [
+        { q: "Tell me a bit about yourself.", behavioral: false },
+        { q: "What made you apply for this role?", behavioral: false },
+        { q: "Tell me about a time you solved a difficult problem, at work or in your studies.", behavioral: true },
+        { q: "What would you say is your biggest strength?", behavioral: false },
+        { q: "Tell me about a time you disagreed with someone. How did you handle it?", behavioral: true },
+        { q: "What's something you're working on improving?", behavioral: false },
+        { q: "Where do you see yourself in a few years?", behavioral: false },
+        { q: "That's all from my side. Do you have any questions for me?", behavioral: false, final: true }
+      ],
+      answers: {
+        role: ["You'd plan daily deliveries, solve problems when trucks are late, and keep our customers updated. No two days are the same.",
+               "It's a mix of planning, problem-solving and lots of contact with drivers and customers."],
+        team: ["The team is eight people, a nice mix of ages. We have coffee together every morning at nine.",
+               "Eight people. Very friendly, and we help each other a lot when it gets busy."],
+        company: ["Northwind moves goods for about two hundred shops in the Netherlands and Belgium. We've grown a lot in the last three years.",
+                  "We're a mid-size logistics company in Rotterdam, about one hundred and fifty people."],
+        remote: ["It's hybrid: three days in the office and two from home. The planning days are in the office."],
+        salary: ["We'll talk about salary in the next round, but it's in line with the market, plus a travel allowance."],
+        next: ["We're talking to a few more people this week. You'll hear from us within about a week, and the next step is a meeting with the team."],
+        culture: ["It's quite informal. People say what they think, and we celebrate wins with cake. A lot of cake.",
+                  "Open and friendly. We like people who speak up when something isn't working."],
+        growth: ["There's a training budget for everyone, and several people in my team started as coordinators and are now planners or team leads."],
+        you: ["I've been here six years. I started as a planner myself, so I know the job well. I still love it."],
+        name: ["I'm Ellen, the operations manager."],
+        general: ["Good question. I'd say the most important thing here is that you stay calm and keep people informed.",
+                  "Hmm, good question. Honestly, it depends, but we always try to keep things simple and practical."]
+      }
+    }
+  };
+
+  // ---------------- Topic detection ----------------
+  var TOPICS = {
+    work: /\b(?:work(?:s|ing|ed)?|job|office|company|boss|colleagues?|career|engineer|developer|nurse|teacher|shifts?|clients?|customers?|freelanc\w*|business|startup|what do you do|for a living)\b/g,
+    study: /\b(?:stud(?:y|ying|ied|ies)|universit(?:y|ies)|uni|college|school|course|degree|students?|exams?|master'?s|bachelor'?s|thesis)\b/g,
+    hobbies: /\b(?:hobb(?:y|ies)|free time|spare time|for fun|read(?:ing)?|books?|paint(?:ing)?|draw(?:ing)?|gaming|video games|board games|photography|garden(?:ing)?|chess|brew(?:ing)?|records?|vinyl)\b/g,
+    sport: /\b(?:gym|sports?|football|soccer|running|marathon|cycling|bike|biking|tennis|swim(?:ming)?|climbing|bouldering|work ?out|fitness|yoga|hockey|padel|basketball|hiking|hike)\b/g,
+    travel: /\b(?:travel\w*|trips?|holidays?|vacations?|abroad|flew|flights?|visited|backpack\w*|beach|spain|italy|france|portugal|japan|thailand|vietnam|greece|london|paris|barcelona|lisbon|road trip)\b/g,
+    food: /\b(?:food|cook(?:ing)?|restaurants?|dinner|eat(?:ing)?|pizza|sushi|pasta|bak(?:e|ing)|recipes?|lunch|breakfast|curry|vegan|vegetarian|spicy)\b/g,
+    music: /\b(?:music|songs?|bands?|concerts?|festivals?|guitar|piano|drums|singing|spotify|playlists?|dj|jazz|techno|rock|hip ?hop|rap)\b/g,
+    movies: /\b(?:movies?|films?|series|netflix|tv|cinema|documentar(?:y|ies)|anime)\b/g,
+    family: /\b(?:family|parents|mom|mum|dad|mother|father|brothers?|sisters?|siblings?|kids|children|son|daughter|wife|husband|grandparents?)\b/g,
+    pets: /\b(?:pets?|dogs?|cats?|pupp(?:y|ies)|kittens?)\b/g,
+    weekend: /\b(?:weekends?|saturday|sunday|friday night|tonight|this evening)\b/g,
+    city: /\b(?:where (?:are )?you from|i'm from|i am from|come from|grew up|born in|live in|living in|moved to|moved here|amsterdam|rotterdam|utrecht|the hague|den haag|eindhoven|groningen|netherlands|holland|hometown|neighbou?rhood)\b/g,
+    goals: /\b(?:goals?|dreams?|future|someday|one day|ambitions?|next year|bucket list|five years|hope to|plan to|want to (?:become|start|learn|travel|move|open))\b/g,
+    day: /\b(?:my day|your day|today|this morning|busy day|long day|good day)\b/g,
+    host: /\b(?:host|lisa|friends? from|know (?:her|him|them) from|met (?:her|him|them) at)\b/g
+  };
+  var I_TOPICS = {
+    salary: /\b(?:salary|pay|paid|money|benefits|bonus)\b/g,
+    remote: /\b(?:remote|from home|hybrid|hours|flexib\w*|part[- ]time)\b/g,
+    next: /\b(?:next steps?|process|hear back|when will|timeline|decision)\b/g,
+    team: /\b(?:team|colleagues|people|manager)\b/g,
+    culture: /\b(?:culture|atmosphere|environment|like working)\b/g,
+    growth: /\b(?:grow|growth|training|learn|career|promotion|develop\w*)\b/g,
+    you: /\b(?:how long have you|do you (?:like|enjoy)|your (?:favourite|favorite|role|background))\b/g,
+    company: /\b(?:company|northwind|business|customers|clients|shops)\b/g,
+    role: /\b(?:role|job|day[- ]to[- ]day|typical day|tasks|responsibilit\w*|challeng\w*|position)\b/g,
+    name: /\b(?:your name)\b/g
+  };
+  var KNOWN_PLACES = /\b(amsterdam|rotterdam|utrecht|the hague|den haag|eindhoven|groningen|leiden|delft|haarlem|maastricht|spain|italy|france|portugal|japan|thailand|vietnam|greece|london|paris|barcelona|lisbon|berlin|germany|belgium|brussels|morocco|turkey|indonesia|bali|new york|america)\b/i;
+
+  function norm(t) { return String(t || "").replace(/[\u2018\u2019\u02BC]/g, "'").replace(/\s+/g, " ").trim(); }
+  function countIn(re, t) { re.lastIndex = 0; var m = t.match(re); return m ? m.length : 0; }
+
+  function detectTopics(text, table) {
+    var t = norm(text).toLowerCase(), out = [];
+    table = table || TOPICS;
+    Object.keys(table).forEach(function (k) { var c = countIn(table[k], t); if (c) out.push({ k: k, c: c }); });
+    out.sort(function (a, b) { return b.c - a.c; });
+    return out.map(function (x) { return x.k; });
+  }
+
+  var QUESTION_RE = /\b(?:what about you|how about you|and you|and yourself|what do you|what did you|what are you|what's your|what is your|where do you|where are you|where did you|how do you|how did you|how was your|how is your|how's your|how long have you|how old are you|do you|did you|are you|have you|would you|could you|can you|will you|were you|is it|is there|are there|what's the|what is the|what does|what kind|how big|how many|how much|who is|when do|when will|tell me about (?:you|your)|you ever|any plans|any pets|any hobbies)\b/i;
+  var BOUNCE_ONLY = /\b(?:what about you|how about you|and you|and yourself|you\?)\s*\??\s*$/i;
+
+  function findQuestion(text) {
+    var t = norm(text);
+    var lower = t.toLowerCase();
+    var qm = t.indexOf("?");
+    var m = lower.match(QUESTION_RE);
+    if (qm < 0 && !m) return null;
+    var start;
+    if (m) start = m.index;
+    else { // sentence that ends with ?
+      var before = t.slice(0, qm), b = Math.max(before.lastIndexOf("."), before.lastIndexOf("!"), before.lastIndexOf("?"));
+      start = b + 1;
+      var comma = before.lastIndexOf(",");
+      if (comma > start && words(t.slice(start, qm)).length > 8) start = comma + 1;
+    }
+    if (qm >= 0 && m && m.index > qm) { // first question mark comes earlier
+      var bf = t.slice(0, qm), bb = Math.max(bf.lastIndexOf("."), bf.lastIndexOf("!"));
+      start = bb + 1;
+    }
+    var seg = t.slice(start).trim();
+    return { segment: seg, start: start, bounce: BOUNCE_ONLY.test(t) && words(seg).length <= 4 };
+  }
+
+  function words(t) { return (norm(t).match(/[A-Za-z0-9][A-Za-z0-9'\-]*/g) || []); }
+
+  var STOP = ("about above after again also always another anything around because been before being below between both could " +
+    "didn't does doing don't down during each every from further going have having here hers herself himself into it's itself " +
+    "just know like little made make many maybe more most much myself never only other ours over really said same should " +
+    "since some something still such than that that's their them themselves then there these they thing things think this those " +
+    "through time today together under until very want well were what when where which while will with would your yours yourself " +
+    "pretty actually honestly okay yeah good nice great love lot lots being sure kind sort first last next year years week weeks month " +
+    "people person haha usually sometimes probably right friends friend favourite favorite").split(" ");
+
+  function contentWords(text) {
+    var out = {};
+    words(text).forEach(function (w) {
+      var l = w.toLowerCase().replace(/'s$/, "");
+      if (l.length >= 5 && STOP.indexOf(l) < 0) out[l] = true;
+    });
+    return out;
+  }
+
+  // Did the user pick up something the partner said (outside the partner's question)?
+  function followUpWords(userText, partnerText) {
+    if (!partnerText) return [];
+    var sentences = norm(partnerText).split(/(?<=[.!?])\s+/).filter(function (s) { return s.indexOf("?") < 0; });
+    var pw = contentWords(sentences.join(" "));
+    var uw = contentWords(userText);
+    return Object.keys(uw).filter(function (w) { return pw[w]; });
+  }
+
+  // ---------------- Helpers ----------------
+  function rngFrom(seed) {
+    var a = (seed >>> 0) || 1;
+    return function () {
+      a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  // Pick from arr, never reusing an item until all have been used (and never the same twice in a row)
+  function pick(convo, key, arr) {
+    if (!arr || !arr.length) return "";
+    var used = convo.used[key] || (convo.used[key] = []);
+    var free = [];
+    for (var i = 0; i < arr.length; i++) if (used.indexOf(i) < 0) free.push(i);
+    if (!free.length) {
+      var last = used[used.length - 1];
+      used.length = 0; if (arr.length > 1) used.push(last);
+      free = []; for (var j = 0; j < arr.length; j++) if (j !== last || arr.length === 1) free.push(j);
+    }
+    var idx = free[Math.floor(convo.rng() * free.length)];
+    used.push(idx);
+    return arr[idx];
+  }
+  function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+  function titleCase(s) { return s.replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
+
+  // ---------------- Reply templates (social) ----------------
+  var REACT = {
+    work: ["Oh, that sounds interesting!", "Nice, that sounds like a cool job.", "Oh wow, I didn't expect that!", "That sounds busy, but fun."],
+    study: ["Oh cool, that sounds interesting.", "Nice! Studying is hard work.", "Ah, that's a good field."],
+    hobbies: ["Oh, I love that!", "That sounds really fun.", "Ha, that's a great hobby.", "Oh nice, I've always wanted to try that."],
+    sport: ["Respect! I'm impressed.", "Oh nice, that keeps you fit.", "Wow, that sounds intense!", "That's great, I wish I had that energy."],
+    travel: ["Oh wow, that sounds amazing!", "That sounds like a great trip.", "Ooh, I'm jealous!", "Wow, lucky you!"],
+    food: ["Mmm, now I'm hungry!", "Oh, that sounds delicious.", "Ha, you have good taste.", "Oh nice, I love that too."],
+    music: ["Oh nice, good taste!", "Ha, I like that.", "Cool, music is so important."],
+    movies: ["Oh, I've heard about that!", "Nice, I need some new things to watch.", "Ha, good choice."],
+    family: ["Aww, that's sweet.", "That sounds really nice.", "Family is so important."],
+    pets: ["Aww, I love that!", "Oh, cute!", "Ha, that's adorable."],
+    weekend: ["That sounds like a good weekend.", "Nice, sounds relaxing.", "Oh fun!"],
+    city: ["Oh nice!", "Ah, cool!", "Oh, I like it there."],
+    goals: ["That's a great goal.", "Wow, I love that you know what you want.", "That's really cool, I hope you do it."],
+    day: ["Glad to hear it!", "Ha, sounds like a full day.", "Nice, that's good to hear."],
+    host: ["Ah, nice!", "Oh, that's cool.", "Ha, small world!"]
+  };
+  var REACT_PLACE = ["Oh, {place}! Nice.", "{place}, nice! I've heard good things.", "Ooh, {place}. Lovely."];
+  var GENERIC_REACT = ["Oh, nice!", "Ha, I like that.", "That's cool.", "Oh, interesting!", "Ah, fun!"];
+  var DETAIL_REACT = ["I love that detail!", "Ha, that's a great story.", "That's so specific, I love it."];
+  var FLAT_REACT = ["Oh, okay...", "Hm. Alright.", "Ah, okay then.", "Right... okay.", "Mm, okay."];
+  var LOW_REACT = ["Mm-hm.", "Right.", "Okay.", "Ah, okay.", "Sure."];
+  var LONG_REACT = ["Wow, okay, that's a lot!", "Ha, okay, I followed most of that!"];
+  var FOLLOW = {
+    work: ["What do you like most about it?", "How did you end up doing that?", "What's a normal day like for you?"],
+    study: ["What made you choose that?", "What do you want to do after?"],
+    hobbies: ["How did you get into that?", "How often do you do that?", "What do you like most about it?"],
+    sport: ["How long have you been doing that?", "Do you do it with friends?"],
+    travel: ["What was the best part?", "Where do you want to go next?", "Any good food there?"],
+    food: ["Do you cook a lot yourself?", "What's your go-to dish?", "Any restaurant tips for me?"],
+    music: ["Have you seen them live?", "Do you play anything yourself?"],
+    movies: ["What's it about?", "Would you recommend it?"],
+    family: ["Do you see them often?", "Are you close with them?"],
+    pets: ["What's their name?", "Do you have photos? I need to see!"],
+    weekend: ["Anything fun planned?", "Are you more of a lazy or busy weekend person?"],
+    city: ["How long have you lived there?", "Do you like it there?", "What's the best spot there?"],
+    goals: ["What's the first step?", "What made you want that?"],
+    day: ["Anything fun happen?", "What's been the best part so far?"],
+    host: ["How long have you known each other?", "Do you know many people here?"]
+  };
+  var ASK = { // starting a new topic (warm)
+    work: "So what do you do?", study: "Are you studying, or working?",
+    hobbies: "What do you like to do when you're not working?", sport: "Do you do any sports?",
+    travel: "Have you been anywhere nice lately? I'm always looking for travel ideas!", food: "What's your favourite food? Be honest!",
+    music: "What kind of music are you into?", movies: "Seen any good films or series lately?",
+    family: "Do you have any brothers or sisters?", pets: "Are you a cat person or a dog person?",
+    weekend: "Any fun plans for the weekend?", city: "Where are you from originally?",
+    goals: "What's something you really want to do in the next few years?", day: "How's your day been?",
+    host: "How do you know Lisa?"
+  };
+  var ASK_PLAIN = [["work", "So... what else do you do?"], ["travel", "Do you travel much?"], ["weekend", "Any plans this weekend?"],
+                   ["music", "What music do you like?"], ["pets", "Any pets?"], ["food", "What food do you like?"]];
+  var FLAT_PROMPT = ["So, tell me something you're really into?", "What's something that made you happy this week?",
+                     "Hmm... what do you do for fun, then?"];
+  var BOUNCE = ["What about you?", "How about you?", "And you?"];
+
+  // ---------------- Interview templates ----------------
+  var I_GOOD = ["That's a clear example, thank you.", "Great, thank you. That's helpful.", "Nice, I like that example.", "Thank you, that's very clear."];
+  var I_GOOD_GEN = ["Great, thank you.", "Thanks, that's helpful.", "Okay, great. Thank you.", "Nice, thank you for sharing that."];
+  var I_OK = ["Okay, thank you.", "Alright, thanks.", "Okay, I see."];
+  var I_PROBE = ["Could you tell me a bit more about that?", "Can you give me a concrete example?", "Okay... can you say a bit more?"];
+  var I_RESULT = ["And what was the result?", "How did it end? What changed because of what you did?", "What was the outcome, and what did you learn?"];
+  var I_TRANS = ["", "Let's move on. ", "Next question. ", "Okay, next one. "];
+  var I_CLOSE = ["Alright! Thank you so much for your time today. We'll be in touch within a week.",
+                 "Great, thank you for coming in. It was nice to meet you. We'll let you know soon."];
+  var I_DONE = ["Thanks again! You can end the interview whenever you're ready.", "It was really nice talking to you. Good luck!",
+                "Thank you, that's everything from my side. Tap End when you're ready to see how you did."];
+  var I_MORE = ["Anything else you'd like to know?", "Any other questions?"];
+
+  var FLAT_RE = /^(?:yes|yeah|yep|no|nope|ok|okay|fine|good|nothing|nothing much|not much|not really|i don't know|dunno|maybe|sure|cool|nice|thanks|thank you|alright|same|it's fine|it was fine|it's okay|pretty good|good thanks|fine thanks)[.!]?$/i;
+
+  // ---------------- Conversation state ----------------
+  function newConversation(personaId, seed) {
+    var p = PERSONAS[personaId] || PERSONAS.date;
+    return { persona: p, rng: rngFrom(seed || 1), used: {}, messages: [], userTurns: [],
+             noAskStreak: 0, lastAskedTopic: null, followed: {}, visited: {}, qIndex: 0, probed: {}, done: false,
+             partnerWords: 0, userWords: 0, startedAt: Date.now() };
+  }
+
+  function opener(convo) {
+    var p = convo.persona, text = pick(convo, "opener", p.opener);
+    convo.lastAskedTopic = p.kind === "interview" ? "q0" : (p.id === "party" ? "host" : "day");
+    convo.visited[convo.lastAskedTopic] = true;
+    return text;
+  }
+
+  function addPartner(convo, text) {
+    convo.messages.push({ from: "them", text: text });
+    convo.partnerWords += words(text).length;
+  }
+
+  function lastPartnerText(convo) {
+    for (var i = convo.messages.length - 1; i >= 0; i--) if (convo.messages[i].from === "them") return convo.messages[i].text;
+    return "";
+  }
+
+  // Analyse a user turn and update the state (used by both reply engines)
+  function observeUser(convo, text, opts) {
+    opts = opts || {};
+    var p = convo.persona, t = norm(text), lower = t.toLowerCase();
+    var interview = p.kind === "interview";
+    var cur = interview ? p.agenda[Math.min(convo.qIndex, p.agenda.length - 1)] : null;
+    var prevPartner = lastPartnerText(convo);
+    var r = S.score({ text: t, seconds: opts.seconds, typed: opts.typed, category: p.category, chat: true,
+                      noQuestionCheck: interview, noResultCheck: !(interview && cur && cur.behavioral) });
+    var sig = S.signals(t);
+    var q = findQuestion(t);
+    var n = words(t).length;
+    var topics = detectTopics(t);
+    var qTopic = null;
+    if (q) {
+      var qt = detectTopics(q.segment, interview ? I_TOPICS : TOPICS);
+      if (!interview) {
+        if (/\b(?:your name|who are you)\b/i.test(q.segment)) qt.unshift("name");
+        if (/\bhow old\b/i.test(q.segment)) qt.unshift("age");
+        if (/\bwhat do you do\b|\bfor a living\b/i.test(q.segment)) qt.unshift("work");
+      }
+      var stated = detectTopics(t.slice(0, q.start));
+      var asked = convo.lastAskedTopic && !/^q\d/.test(convo.lastAskedTopic) ? convo.lastAskedTopic : null;
+      qTopic = qt[0] || (q.bounce ? (stated[0] || asked || topics[0]) : null) || "general";
+      if (!p.answers[qTopic]) qTopic = "general";
+    }
+    var outside = q ? words(t.slice(0, q.start)).length : n;
+    var placeM = t.match(KNOWN_PLACES);
+    var a = {
+      text: t, words: n, seconds: opts.seconds || null, typed: !!opts.typed, result: r, signals: sig,
+      question: !!q, questionText: q ? q.segment : "", questionOnly: !!q && outside < 4, qTopic: qTopic,
+      topics: topics, topic: topics[0] || null,
+      place: placeM ? titleCase(placeM[1]) : null,
+      flat: !q && (n < 5 || (FLAT_RE.test(lower.replace(/[,]/g, "")) && n < 8)),
+      long: (opts.seconds && opts.seconds > 60) || n > 160,
+      detail: sig.nums + sig.props + sig.examples > 0 || sig.story >= 2,
+      followUp: (interview && !q) ? [] : followUpWords(t, prevPartner),
+      behavioral: !!(cur && cur.behavioral), interviewQ: cur ? cur.q : null,
+      noAskBefore: convo.noAskStreak
+    };
+    if (!interview) convo.noAskStreak = q ? 0 : convo.noAskStreak + 1;
+    a.lowEngagement = !interview && convo.noAskStreak >= 2;
+    a.verdict = turnVerdict(a, p);
+    convo.userTurns.push(a);
+    convo.messages.push({ from: "me", text: t });
+    convo.userWords += n;
+    return a;
+  }
+
+  // ---------------- Rule-based reply ----------------
+  function ruleReply(convo, a) {
+    var reply = convo.persona.kind === "interview" ? interviewReply(convo, a) : socialReply(convo, a);
+    var prev = lastPartnerText(convo), tries = 0;
+    while (reply === prev && tries++ < 5) reply = convo.persona.kind === "interview" ? interviewReply(convo, a) : socialReply(convo, a);
+    return reply;
+  }
+
+  function nextAgendaTopic(convo) {
+    var ag = convo.persona.agenda;
+    for (var i = 0; i < ag.length; i++) if (!convo.visited[ag[i]]) return ag[i];
+    convo.visited = {}; return ag[Math.floor(convo.rng() * ag.length)];
+  }
+
+  function socialReply(convo, a) {
+    var p = convo.persona, parts = [], low = a.lowEngagement;
+    if (a.topic) convo.visited[a.topic] = true;
+    // 1) React to what they said
+    if (!a.questionOnly) {
+      if (a.flat) parts.push(pick(convo, "flat", FLAT_REACT));
+      else if (low) parts.push(pick(convo, "low", LOW_REACT));
+      else if (a.long && convo.rng() < 0.5) parts.push(pick(convo, "long", LONG_REACT));
+      else if (a.place && (a.topic === "travel" || a.topic === "city")) parts.push(pick(convo, "place", REACT_PLACE).replace("{place}", a.place));
+      else if (a.topic && REACT[a.topic]) parts.push(pick(convo, "react-" + a.topic, REACT[a.topic]));
+      else parts.push(pick(convo, "react", GENERIC_REACT));
+      if (!a.flat && !low && a.detail && a.words > 12 && convo.rng() < 0.4) parts.push(pick(convo, "detail", DETAIL_REACT));
+    }
+    // 2) Answer their question from the persona
+    if (a.question) {
+      var topic = a.qTopic || "general";
+      parts.push(pick(convo, "ans-" + topic, p.answers[topic] || p.answers.general));
+      convo.visited[topic] = true;
+      // 3) Sometimes ask something back
+      var shared = !a.questionOnly && a.topic && a.topic !== topic && FOLLOW[a.topic] && !convo.followed[a.topic];
+      if (shared && convo.rng() < 0.7) {
+        convo.followed[a.topic] = true;
+        parts.push(pick(convo, "follow-" + a.topic, FOLLOW[a.topic])); convo.lastAskedTopic = a.topic;
+      } else if (!a.questionOnly && a.words > 8 && convo.rng() < 0.5) {
+        convo.lastAskedTopic = null; // they already shared; let them lead
+      } else if (convo.rng() < 0.6) {
+        if (topic !== "general" && topic !== "name" && topic !== "age" && FOLLOW[topic] && convo.rng() < 0.5 && ASK[topic]) {
+          parts.push(ASK[topic].replace(/^So /, "").replace(/^./, function (c) { return c.toUpperCase(); }));
+        } else parts.push(pick(convo, "bounce", BOUNCE));
+        convo.lastAskedTopic = topic;
+      } else convo.lastAskedTopic = null;
+      return parts.join(" ");
+    }
+    // 3) No question from the user: the partner keeps it going
+    if (a.flat) {
+      parts.push(pick(convo, "flatprompt", FLAT_PROMPT)); convo.lastAskedTopic = "hobbies";
+    } else if (low) {
+      var opts2 = ASK_PLAIN.filter(function (x) { return !convo.visited[x[0]] && x[0] !== a.topic; });
+      if (!opts2.length) opts2 = ASK_PLAIN.filter(function (x) { return x[0] !== a.topic; });
+      var pl = opts2[Math.floor(convo.rng() * opts2.length)]; parts.push(pl[1]); convo.lastAskedTopic = pl[0]; convo.visited[pl[0]] = true;
+    } else if (a.topic && FOLLOW[a.topic] && !convo.followed[a.topic]) {
+      convo.followed[a.topic] = true;
+      parts.push(pick(convo, "follow-" + a.topic, FOLLOW[a.topic])); convo.lastAskedTopic = a.topic;
+    } else {
+      var nt = nextAgendaTopic(convo); convo.visited[nt] = true;
+      // share a little about themselves first, then ask (keeps it two-sided)
+      if (convo.rng() < 0.4 && p.answers[nt]) parts.push(pick(convo, "ans-" + nt, p.answers[nt]).split(/(?<=[.!])\s/)[0]);
+      parts.push(ASK[nt] || pick(convo, "bounce", BOUNCE)); convo.lastAskedTopic = nt;
+    }
+    return parts.join(" ");
+  }
+
+  function interviewReply(convo, a) {
+    var p = convo.persona, parts = [], ag = p.agenda;
+    var qi = Math.min(convo.qIndex, ag.length - 1), cur = ag[qi];
+    if (convo.done) {
+      if (a.question && !a.flat) return pick(convo, "ians-" + a.qTopic, p.answers[a.qTopic] || p.answers.general) + " " + pick(convo, "imore", I_MORE);
+      return pick(convo, "idone", I_DONE);
+    }
+    if (a.question && !a.flat) {
+      parts.push(pick(convo, "ians-" + a.qTopic, p.answers[a.qTopic] || p.answers.general));
+      if (cur.final) { parts.push(pick(convo, "imore", I_MORE)); return parts.join(" "); }
+    } else if (cur.final) {
+      convo.done = true; return pick(convo, "iclose", I_CLOSE);
+    } else if (a.flat && !convo.probed[qi]) {
+      convo.probed[qi] = true; return pick(convo, "iprobe", I_PROBE);
+    } else if (cur.behavioral && !a.signals.result && !convo.probed[qi]) {
+      convo.probed[qi] = true;
+      return pick(convo, "iok", I_OK) + " " + pick(convo, "iresult", I_RESULT);
+    } else {
+      var good = a.result.score >= 70 || (a.detail && a.result.hedges <= 1);
+      parts.push(good ? (cur.behavioral ? pick(convo, "igood", I_GOOD) : pick(convo, "igoodgen", I_GOOD_GEN)) : pick(convo, "iok", I_OK));
+    }
+    convo.qIndex = Math.min(qi + 1, ag.length - 1);
+    var nq = ag[convo.qIndex];
+    parts.push((nq.final ? "" : pick(convo, "itrans", I_TRANS)) + nq.q);
+    convo.lastAskedTopic = "q" + convo.qIndex;
+    return parts.join(" ").replace(/\s+/g, " ").trim();
+  }
+
+  // ---------------- Live coach ----------------
+  // ctx: { category, prevPartner, lowEngagement, typed }
+  function liveCoach(text, seconds, ctx) {
+    ctx = ctx || {};
+    var t = norm(text), n = words(t).length, chips = [];
+    if (!n) {
+      if (ctx.lowEngagement) chips.push({ type: "warn", key: "low", text: "They seem less interested. Ask them something!" });
+      return chips;
+    }
+    var marks = S.findMarks(t);
+    var f = marks.filter(function (m) { return m.type === "filler"; });
+    var h = marks.filter(function (m) { return m.type === "hedge"; });
+    var sig = S.signals(t);
+    var fu = (ctx.category === "interview" && !sig.question) ? [] : followUpWords(t, ctx.prevPartner);
+    var uniq = function (arr) { var o = []; arr.forEach(function (m) { var l = m.text.toLowerCase(); if (o.indexOf(l) < 0) o.push(l); }); return o.slice(0, 3).join(", "); };
+    if (!ctx.typed && seconds >= 60) chips.push({ type: "warn", key: "long", text: "Over a minute. Pass the ball back!" });
+    else if (!ctx.typed && seconds >= 45) chips.push({ type: "warn", key: "long", text: "Talking a long time. Pass the ball soon" });
+    else if (ctx.typed && n > 120) chips.push({ type: "warn", key: "long", text: "That's long. Pass the ball back" });
+    if (sig.question && ctx.category !== "interview") chips.push({ type: "good", key: "q", text: "Good question back!" });
+    else if (sig.question) chips.push({ type: "good", key: "q", text: "Good question!" });
+    else if (ctx.lowEngagement) chips.push({ type: "warn", key: "low", text: "They seem less interested. Ask them something!" });
+    if (fu.length) chips.push({ type: "good", key: "fu", text: "Nice, you picked up on “" + fu[0] + "”" });
+    if (sig.nums + sig.props + sig.examples > 0 || sig.story >= 2) chips.push({ type: "good", key: "detail", text: "Nice detail!" });
+    if (ctx.category === "interview" && ctx.behavioral && sig.result) chips.push({ type: "good", key: "result", text: "Good, you gave a result" });
+    if (f.length) chips.push({ type: "warn", key: "fill", text: "Fillers: " + f.length + " (" + uniq(f) + ")" });
+    if (h.length) chips.push({ type: "warn", key: "hedge", text: "Unsure words: " + uniq(h) });
+    if (!ctx.typed && seconds >= 5 && n >= 8) {
+      var wpm = Math.round(n / (seconds / 60));
+      if (wpm > 175) chips.push({ type: "warn", key: "pace", text: "Pace " + wpm + " wpm: slow down a bit" });
+      else if (wpm < 95) chips.push({ type: "info", key: "pace", text: "Pace " + wpm + " wpm: a bit slow" });
+      else chips.push({ type: "good", key: "pace", text: "Pace " + wpm + " wpm: good" });
+    }
+    if (n >= 12 && !f.length && !h.length) chips.push({ type: "good", key: "conf", text: "Strong, confident words" });
+    if (ctx.category === "interview" && ctx.behavioral && n > 40 && !sig.result) chips.push({ type: "info", key: "result", text: "Tip: finish with the result" });
+    return chips.slice(0, 5);
+  }
+
+  // One-line verdict after a turn: one good thing + one thing to fix
+  function turnVerdict(a, p) {
+    var r = a.result, social = p.kind !== "interview", good = null, fix = null;
+    if (a.question && social) good = "Good question back";
+    else if (a.followUp && a.followUp.length) good = "You picked up on what they said";
+    else if (a.behavioral && a.signals.result) good = "Clear result";
+    else if (a.detail) good = "Nice detail";
+    else if (a.question) good = "Good question";
+    else if (r.hedges === 0 && a.words >= 8) good = "Confident words";
+    else if (r.fillers === 0 && a.words >= 5) good = "No filler words";
+    else if (a.words >= 4) good = "You kept it going";
+    if (a.flat) fix = "Too short: add a detail";
+    else if (r.fillers >= 2) fix = "Fewer fillers (" + r.fillers + ")";
+    else if (r.hedges >= 2) fix = "Fewer unsure words (" + r.hedges + ")";
+    else if (a.long) fix = "Shorter turns: pass the ball";
+    else if (a.behavioral && !a.signals.result) fix = "Add the result";
+    else if (social && !a.question && a.noAskBefore >= 1) fix = "Ask something back";
+    else if (!a.detail && a.words >= 4 && !a.question) fix = "Add one real detail";
+    else if (r.wpm && r.wpm > 180) fix = "Slow down a little";
+    else if (r.fillers === 1) fix = "One filler: “" + (r.marks.filter(function (m) { return m.type === "filler"; })[0] || {}).text + "”";
+    else if (r.hedges === 1) fix = "Drop “" + (r.marks.filter(function (m) { return m.type === "hedge"; })[0] || {}).text + "”";
+    var tone = fix && (a.flat || r.fillers >= 2 || r.hedges >= 2 || a.long || !good) ? "warn" : "good";
+    var text = (good ? "👍 " + good : "") + (good && fix ? " · " : "") + (fix ? "👉 " + fix : "");
+    return { tone: tone, good: good, fix: fix, text: text || "👍 Keep going" };
+  }
+
+  // ---------------- Summary ----------------
+  function summarize(convo) {
+    var p = convo.persona, turns = convo.userTurns, social = p.kind !== "interview";
+    if (!turns.length) return { score: 0, turns: 0, best: [], work: ["Say something! Even a short answer gets the ball rolling."], verdict: "No answers yet", stats: {} };
+    var avg = turns.reduce(function (s, a) { return s + a.result.score; }, 0) / turns.length;
+    var asked = turns.filter(function (a) { return a.question; }).length;
+    var follow = turns.filter(function (a) { return a.followUp.length; }).length;
+    var uw = convo.userWords, pw = convo.partnerWords, share = uw / Math.max(1, uw + pw);
+    var qPts = social ? Math.min(1, asked / Math.max(1, Math.ceil(turns.length * 0.4))) * 12 : (asked >= 1 ? 12 : 4);
+    var lo = social ? 0.4 : 0.55, hi = social ? 0.65 : 0.82;
+    var bPts = share >= lo && share <= hi ? 10 : (share >= lo - 0.12 && share <= hi + 0.1 ? 6 : 2);
+    var fPts = Math.min(1, follow / 2) * 8;
+    var flow = qPts + bPts + fPts;
+    var score = Math.round(avg * 0.7 + flow);
+    if (turns.length < 3) score = Math.min(score, 70);
+    score = Math.max(0, Math.min(100, score));
+
+    // Best moments
+    var moments = [];
+    var snip = function (s, max) { var w = words(s); return w.slice(0, max || 10).join(" ") + (w.length > (max || 10) ? "…" : ""); };
+    turns.forEach(function (a, i) {
+      var tn = "Turn " + (i + 1) + ": ";
+      if (a.question) moments.push({ k: "q", w: social ? 5 : 4, text: tn + "you asked “" + snip(a.questionText, 9) + "”. Great way to keep it flowing." });
+      if (a.followUp.length) moments.push({ k: "fu", w: 4.5, text: tn + "you picked up on “" + a.followUp[0] + "” from what they said." });
+      if (a.behavioral && a.signals.result) moments.push({ k: "res", w: 4.2, text: tn + "you finished your story with a clear result." });
+      if (a.detail && a.words >= 10) moments.push({ k: "det", w: 3.5, text: tn + "real details made it memorable: “" + snip(a.text, 9) + "”" });
+      if (a.result.score >= 85) moments.push({ k: "top", w: 3, text: tn + "a strong answer (" + a.result.score + "/100), clear and confident." });
+      else if (a.result.fillers === 0 && a.result.hedges === 0 && a.words >= 12) moments.push({ k: "clean", w: 2.5, text: tn + "clean and confident, with no fillers or unsure words." });
+    });
+    moments.sort(function (x, y) { return y.w - x.w; });
+    var best = [], seenTurn = {}, kinds = {};
+    moments.forEach(function (m) {
+      var k = m.text.split(":")[0];
+      if (best.length < 3 && !seenTurn[k] && (kinds[m.k] || 0) < 2) { best.push(m.text); seenTurn[k] = 1; kinds[m.k] = (kinds[m.k] || 0) + 1; }
+    });
+    moments.forEach(function (m) { if (best.length < 3 && best.indexOf(m.text) < 0) best.push(m.text); });
+    if (!best.length) best.push("You showed up and talked. That's the hardest part!");
+
+    // Things to work on
+    var issues = [];
+    var fill = 0, hed = 0, fillW = {}, hedW = {};
+    turns.forEach(function (a) { a.result.marks.forEach(function (m) { var l = m.text.toLowerCase(); if (m.type === "filler") { fill++; fillW[l] = (fillW[l] || 0) + 1; } else { hed++; hedW[l] = (hedW[l] || 0) + 1; } }); });
+    var top = function (o) { return Object.keys(o).sort(function (a, b) { return o[b] - o[a]; }).slice(0, 2).map(function (k) { return "“" + k + "”"; }).join(" and "); };
+    var tw = Math.max(1, uw);
+    if (social && asked === 0) issues.push({ w: 10, text: "You never asked a question back. Try ending every second answer with a question." });
+    else if (social && asked < turns.length * 0.3) issues.push({ w: 6, text: "Ask back more often. You asked " + asked + " question" + (asked === 1 ? "" : "s") + " in " + turns.length + " turns." });
+    if (!social && asked === 0) issues.push({ w: 5, text: "Prepare one or two questions for the interviewer. It shows real interest." });
+    if (fill >= 2 && (fill / tw > 0.02 || fill >= 3)) issues.push({ w: 4 + fill / tw * 100, text: "Filler words: " + fill + " in total, mostly " + top(fillW) + ". Pause silently instead." });
+    if (hed >= 2 && (hed / tw > 0.02 || hed >= 3)) issues.push({ w: 3.5 + hed / tw * 100, text: "Unsure words: " + hed + " in total (" + top(hedW) + "). Say it like you mean it." });
+    var flats = turns.filter(function (a) { return a.flat; }).length;
+    if (flats) issues.push({ w: 5 + flats, text: flats + " very short answer" + (flats > 1 ? "s" : "") + ". Add one detail or a mini story each time." });
+    var longs = turns.filter(function (a) { return a.long; }).length;
+    if (longs) issues.push({ w: 5, text: "Some turns were very long. Keep it under a minute, then hand over." });
+    if (social && share > hi + 0.1) issues.push({ w: 4, text: "You did most of the talking (" + Math.round(share * 100) + "%). Let them talk more." });
+    if (share < lo - 0.12) issues.push({ w: 4, text: "You talked a lot less than them (" + Math.round(share * 100) + "%). Share a bit more about yourself." });
+    var noRes = turns.filter(function (a, i) {
+      var next = turns[i + 1];
+      return a.behavioral && !a.signals.result && !(next && next.interviewQ === a.interviewQ && next.signals.result);
+    }).length;
+    if (noRes) issues.push({ w: 6, text: "Finish your stories with the result (what changed, ideally a number)." });
+    var noDetail = turns.filter(function (a) { return !a.detail && !a.flat && !a.questionOnly; }).length;
+    if (noDetail >= Math.max(2, turns.length / 2)) issues.push({ w: 4.5, text: "Add more real details: names, places, numbers, little stories." });
+    if (follow === 0 && turns.length >= 2) issues.push({ w: 3, text: "Pick up on something they said and ask about it. It shows you're really listening." });
+    var fast = turns.filter(function (a) { return a.result.wpm && a.result.wpm > 180; }).length;
+    if (fast) issues.push({ w: 3.2, text: "You spoke fast in " + fast + " turn" + (fast > 1 ? "s" : "") + ". Slow down and breathe." });
+    issues.sort(function (x, y) { return y.w - x.w; });
+    var work = issues.slice(0, 3).map(function (x) { return x.text; });
+    if (!work.length) work.push("Keep it up! Next time try a different partner or tell a longer story.");
+
+    var verdict = score >= 85 ? "Great conversation!" : score >= 70 ? "Good conversation!" : score >= 50 ? "Decent, room to grow" : "Keep practising";
+    return { score: score, verdict: verdict, turns: turns.length, best: best, work: work,
+             stats: { avgTurn: Math.round(avg), asked: asked, followUps: follow, talkShare: Math.round(share * 100), flow: Math.round(flow) } };
+  }
+
+  // ---------------- Optional Gemini (user's own key) ----------------
+  var GEMINI_MODELS = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.8-flash", "gemini-2.5-flash"];
+
+  function buildGeminiRequest(convo) {
+    var p = convo.persona, facts = [];
+    Object.keys(p.answers).forEach(function (k) { if (k !== "general") facts.push("- " + k + ": " + p.answers[k][0]); });
+    var role = p.kind === "interview"
+      ? "You are " + p.name + ", a friendly but professional hiring manager. Scene: " + p.scene + ". Ask one interview question at a time (about the candidate, their motivation, strengths, a problem they solved, a disagreement, a weakness, future plans; at the end ask if they have questions). If they tell a story without a result, ask about the result. If an answer is very short, ask for more detail. Answer questions about the job from your facts."
+      : "You are " + p.name + ". " + p.bio + " Scene: " + p.scene + ". You are chatting with the user. React naturally to what they say. If they ask you something, answer from your facts, then often ask something back. If their answer is short or flat, sound a little less excited. If they keep answering without ever asking you anything, become slightly less engaged (shorter, plainer replies), but stay polite.";
+    var sys = role + "\nYour facts:\n" + facts.join("\n") +
+      "\nRules: stay in character, never mention being an AI. Reply in 1 to 3 short, casual spoken sentences (no emojis, no lists, no stage directions). Never be rude, sexual or offensive. " +
+      "Also write a short coaching note for the user about their last message (max 15 words, plain simple English: one good thing or one thing to fix). " +
+      'Respond ONLY with JSON: {"reply": "...", "coach": "..."}';
+    var contents = [{ role: "user", parts: [{ text: "(The conversation starts. Say your first line.)" }] }];
+    convo.messages.forEach(function (m) {
+      var role2 = m.from === "them" ? "model" : "user";
+      var txt = m.from === "them" ? JSON.stringify({ reply: m.text, coach: "" }) : m.text;
+      var last = contents[contents.length - 1];
+      if (last.role === role2) last.parts[0].text += "\n" + txt; else contents.push({ role: role2, parts: [{ text: txt }] });
+    });
+    return { systemInstruction: { parts: [{ text: sys }] }, contents: contents,
+             generationConfig: { temperature: 0.9, maxOutputTokens: 1024, responseMimeType: "application/json" } };
+  }
+
+  function parseGeminiResponse(data) {
+    var c = data && data.candidates && data.candidates[0];
+    if (!c || !c.content || !c.content.parts) throw new Error((data && data.promptFeedback && data.promptFeedback.blockReason) || "empty response");
+    var txt = c.content.parts.filter(function (x) { return x.text && !x.thought; }).map(function (x) { return x.text; }).join("").trim();
+    txt = txt.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
+    var obj;
+    try { obj = JSON.parse(txt); } catch (e) {
+      var m = txt.match(/\{[\s\S]*\}/); if (m) { try { obj = JSON.parse(m[0]); } catch (e2) {} }
+      if (!obj) obj = { reply: txt, coach: "" };
+    }
+    var reply = norm(obj.reply || "");
+    if (!reply) throw new Error("no reply text");
+    if (reply.length > 600) reply = reply.slice(0, 600);
+    return { reply: reply, coach: norm(obj.coach || "").slice(0, 160) };
+  }
+
+  // Returns a Promise of { text, coach, source: "gemini"|"rules", error? }. Never rejects.
+  function partnerReply(convo, a, opts) {
+    opts = opts || {};
+    var rules = function (err) { return { text: ruleReply(convo, a), coach: "", source: "rules", error: err || null }; };
+    if (!opts.apiKey || !opts.fetch) return Promise.resolve(rules());
+    var model = opts.model || GEMINI_MODELS[0];
+    var url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent";
+    var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, opts.timeoutMs || 15000);
+    var body;
+    try { body = JSON.stringify(buildGeminiRequest(convo)); } catch (e) { clearTimeout(timer); return Promise.resolve(rules("could not build request")); }
+    return Promise.resolve().then(function () {
+      return opts.fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": opts.apiKey },
+                               body: body, signal: ctrl ? ctrl.signal : undefined });
+    }).then(function (res) {
+      if (!res.ok) {
+        return res.text().then(function (t) {
+          var msg = "error " + res.status;
+          try { var j = JSON.parse(t); if (j.error && j.error.message) msg += ": " + j.error.message.slice(0, 120); } catch (e) {}
+          throw new Error(msg);
+        }, function () { throw new Error("error " + res.status); });
+      }
+      return res.json();
+    }).then(function (data) {
+      clearTimeout(timer);
+      var g = parseGeminiResponse(data);
+      // keep the rule engine's state roughly in sync (interview question position)
+      if (convo.persona.kind === "interview") {
+        var ag = convo.persona.agenda;
+        for (var i = convo.qIndex + 1; i < ag.length; i++) {
+          var key = ag[i].q.toLowerCase().split(" ").slice(-3).join(" ").replace(/[?.]/g, "");
+          if (g.reply.toLowerCase().indexOf(key) >= 0) { convo.qIndex = i; break; }
+        }
+      }
+      return { text: g.reply, coach: g.coach, source: "gemini" };
+    }).catch(function (err) {
+      clearTimeout(timer);
+      var msg = err && err.name === "AbortError" ? "timed out" : (err && err.message) || "failed";
+      return rules(msg);
+    });
+  }
+
+  var api = { PERSONAS: PERSONAS, GEMINI_MODELS: GEMINI_MODELS, newConversation: newConversation, opener: opener,
+              addPartner: addPartner, observeUser: observeUser, ruleReply: ruleReply, partnerReply: partnerReply,
+              liveCoach: liveCoach, turnVerdict: turnVerdict, summarize: summarize, detectTopics: detectTopics,
+              findQuestion: findQuestion, followUpWords: followUpWords, buildGeminiRequest: buildGeminiRequest,
+              parseGeminiResponse: parseGeminiResponse, lastPartnerText: lastPartnerText };
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  else root.CharismaChat = api;
+})(typeof window !== "undefined" ? window : globalThis);
 </script>
 
 <!-- ===================== App / UI ===================== -->
@@ -436,6 +1331,7 @@
 (function () {
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
+  var Chat = window.CharismaChat;
 
   var PROMPTS = {
     party: [
@@ -480,138 +1376,116 @@
     date: "Tip: be warm and specific, share a little story, and ask them too.",
     interview: "Tip: try STAR — Situation, Task, Action, Result. Finish with a result."
   };
-  var CAT_NAMES = { party: "Party", date: "Date", interview: "Interview" };
+  var CAT_NAMES = { party: "Party", date: "Date", interview: "Interview",
+                    "chat-date": "Chat · Date", "chat-party": "Chat · Party", "chat-interview": "Chat · Interview" };
 
-  var HKEY = "charismaPractice.history.v1", LKEY = "charismaPractice.lang";
-  var state = { cat: "party", idx: 0, recording: false, startT: 0, tick: null,
-                finals: [], sessionFinal: "", interim: "", rec: null, stopping: false, lastSeconds: 0 };
+  var HKEY = "charismaPractice.history.v1", LKEY = "charismaPractice.lang", MKEY = "charismaPractice.mode",
+      MUTEKEY = "charismaPractice.mute", GKEY = "charismaPractice.geminiKey", GMKEY = "charismaPractice.geminiModel",
+      HFKEY = "charismaPractice.handsFree", ASKEY = "charismaPractice.autoSend";
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
 
   // ---------- Storage ----------
-  function loadHist() { try { return JSON.parse(localStorage.getItem(HKEY)) || []; } catch (e) { return []; } }
-  function saveHist(h) { try { localStorage.setItem(HKEY, JSON.stringify(h.slice(-500))); } catch (e) {} }
+  function loadHist() { try { return JSON.parse(lsGet(HKEY)) || []; } catch (e) { return []; } }
+  function saveHist(h) { lsSet(HKEY, JSON.stringify(h.slice(-500))); }
 
-  // ---------- Prompts ----------
-  function showPrompt() {
-    $("prompt").textContent = PROMPTS[state.cat][state.idx];
-    $("hint").textContent = HINTS[state.cat];
-    document.querySelectorAll(".tab").forEach(function (b) {
-      b.setAttribute("aria-pressed", String(b.dataset.cat === state.cat));
-    });
-  }
-  function setCat(cat) { state.cat = cat; state.idx = Math.floor(Math.random() * PROMPTS[cat].length); showPrompt(); resetAnswer(); }
-  function nextPrompt() { state.idx = (state.idx + 1) % PROMPTS[state.cat].length; showPrompt(); resetAnswer(); }
-  function randomPrompt() {
-    var cats = Object.keys(PROMPTS), c, i;
-    do { c = cats[Math.floor(Math.random() * cats.length)]; i = Math.floor(Math.random() * PROMPTS[c].length); }
-    while (c === state.cat && i === state.idx);
-    state.cat = c; state.idx = i; showPrompt(); resetAnswer();
-  }
-  function resetAnswer() {
-    if (state.recording) stopRec(true);
-    state.finals = []; state.sessionFinal = ""; state.interim = "";
-    $("live").textContent = ""; $("timer").textContent = "0:00";
-    $("typed").value = "";
-    $("status").textContent = SR ? "Tap Start and answer as if you were really there." : "Type your answer below.";
-  }
-
-  // ---------- Speech ----------
+  // ======================================================================
+  // Shared speech listener (used by both modes)
+  // ======================================================================
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   var isAndroid = /Android/i.test(navigator.userAgent);
+  var SR_ERRORS = {
+    "not-allowed": "Microphone blocked. Allow mic access for this page (tap the 🔒 icon in the address bar), then try again.",
+    "service-not-allowed": "Speech recognition isn't allowed here. Try Chrome, and open the page over https://.",
+    "audio-capture": "No microphone found. Check that your mic is connected and not used by another app.",
+    "network": "Speech recognition needs an internet connection (Chrome sends audio to its speech service)."
+  };
+
+  var Listener = {
+    active: false, finals: [], sessionFinal: "", interim: "", rec: null, stopping: false, fatal: false,
+    startT: 0, firstHeard: 0, lastHeard: 0, cb: null, finishTimer: null,
+    fullText: function (withInterim) {
+      var parts = this.finals.concat([this.sessionFinal]);
+      if (withInterim) parts.push(this.interim);
+      return parts.join(" ").replace(/\s+/g, " ").trim();
+    },
+    speakingSeconds: function () {
+      if (!this.firstHeard) return 0;
+      // first words arrive ~1 s after you start talking, so add that back
+      return Math.max(1, (this.lastHeard - this.firstHeard) / 1000 + 1.0);
+    },
+    _new: function () {
+      var self = this, r = new SR();
+      r.lang = $("lang").value;
+      r.interimResults = true;
+      // Android Chrome repeats text in continuous mode, so use short sessions and auto-restart.
+      r.continuous = !isAndroid;
+      r.maxAlternatives = 1;
+      r.onresult = function (e) {
+        var fin = "", inter = "";
+        for (var i = 0; i < e.results.length; i++) {
+          var t = e.results[i][0].transcript;
+          if (e.results[i].isFinal) fin += t + " "; else inter += t;
+        }
+        var before = self.fullText(true);
+        self.sessionFinal = fin.trim(); self.interim = inter.trim();
+        var now = Date.now();
+        if (self.fullText(true) !== before) { if (!self.firstHeard) self.firstHeard = now; self.lastHeard = now; }
+        if (self.cb && self.cb.onUpdate) self.cb.onUpdate(self.fullText(false), self.interim);
+      };
+      r.onerror = function (e) {
+        if (e.error === "no-speech" || e.error === "aborted") return;
+        self.fatal = true;
+        if (self.cb && self.cb.onError) self.cb.onError(SR_ERRORS[e.error] || ("Speech error: " + e.error));
+      };
+      r.onend = function () {
+        if (self.sessionFinal) self.finals.push(self.sessionFinal);
+        if (self.interim && (self.stopping || isAndroid)) self.finals.push(self.interim); // keep unfinished words
+        self.sessionFinal = ""; self.interim = "";
+        if (self.active && !self.stopping && !self.fatal) {
+          try { self.rec = self._new(); self.rec.start(); } catch (err) {}
+        } else if (self.stopping) self._finish();
+        else if (self.fatal) { self.active = false; if (self.cb && self.cb.onAbort) self.cb.onAbort(); }
+      };
+      return r;
+    },
+    start: function (cb) {
+      if (!SR) return false;
+      this.abort();
+      this.cb = cb; this.finals = []; this.sessionFinal = ""; this.interim = "";
+      this.fatal = false; this.stopping = false; this.firstHeard = 0; this.lastHeard = 0;
+      try { this.rec = this._new(); this.rec.start(); }
+      catch (err) { if (cb.onError) cb.onError("Couldn't start the microphone: " + err.message); return false; }
+      this.active = true; this.startT = Date.now();
+      return true;
+    },
+    // Graceful stop: waits for the last words, then calls cb.onEnd(text, seconds)
+    stop: function () {
+      if (!this.active) return;
+      var self = this;
+      this.active = false; this.stopping = true;
+      this.stopT = Date.now();
+      try { this.rec && this.rec.stop(); } catch (e) {}
+      this.finishTimer = setTimeout(function () { self._finish(); }, 1800); // fallback if onend never fires
+    },
+    _finish: function () {
+      if (!this.stopping) return;
+      this.stopping = false; clearTimeout(this.finishTimer);
+      if (this.interim) { this.finals.push(this.interim); this.interim = ""; }
+      var cb = this.cb;
+      if (cb && cb.onEnd) cb.onEnd(this.fullText(false), (this.stopT - this.startT) / 1000, this.speakingSeconds());
+    },
+    // Silent stop: throws away the result
+    abort: function () {
+      var wasActive = this.active || this.stopping;
+      this.active = false; this.stopping = false; clearTimeout(this.finishTimer);
+      if (this.rec) { var r = this.rec; this.rec = null; r.onend = null; r.onresult = null; r.onerror = null; try { r.abort(); } catch (e) {} }
+      return wasActive;
+    }
+  };
 
   function fmt(s) { s = Math.floor(s); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
-  function fullText() { return state.finals.concat([state.sessionFinal]).join(" ").replace(/\s+/g, " ").trim(); }
-  function renderLive() {
-    var el = $("live"); el.textContent = "";
-    var f = fullText();
-    if (f) el.appendChild(document.createTextNode(f + " "));
-    if (state.interim) { var s = document.createElement("span"); s.className = "interim"; s.textContent = state.interim; el.appendChild(s); }
-  }
-
-  function newRecognizer() {
-    var r = new SR();
-    r.lang = $("lang").value;
-    r.interimResults = true;
-    // Android Chrome repeats text in continuous mode, so use short sessions and auto-restart.
-    r.continuous = !isAndroid;
-    r.maxAlternatives = 1;
-    r.onresult = function (e) {
-      var fin = "", inter = "";
-      for (var i = 0; i < e.results.length; i++) {
-        var t = e.results[i][0].transcript;
-        if (e.results[i].isFinal) fin += t + " "; else inter += t;
-      }
-      state.sessionFinal = fin.trim(); state.interim = inter.trim();
-      renderLive();
-    };
-    r.onerror = function (e) {
-      if (e.error === "no-speech" || e.error === "aborted") return;
-      var msg = {
-        "not-allowed": "Microphone blocked. Allow mic access for this page (tap the 🔒 icon in the address bar). If you opened the file directly on a phone, open it from an https:// link instead.",
-        "service-not-allowed": "Speech recognition isn't allowed here. Try Chrome, and open the page over https://.",
-        "audio-capture": "No microphone found. Check that your mic is connected and not used by another app.",
-        "network": "Speech recognition needs an internet connection (Chrome sends audio to its speech service)."
-      }[e.error] || ("Speech error: " + e.error);
-      showNotice(msg, true);
-      state.fatal = true;
-    };
-    r.onend = function () {
-      if (state.sessionFinal) state.finals.push(state.sessionFinal);
-      if (state.interim && (state.stopping || isAndroid)) state.finals.push(state.interim); // keep unfinished words
-      state.sessionFinal = ""; state.interim = "";
-      renderLive();
-      if (state.recording && !state.stopping && !state.fatal) {
-        try { state.rec = newRecognizer(); state.rec.start(); } catch (err) {}
-      } else if (state.stopping) {
-        finishRec();
-      }
-    };
-    return r;
-  }
-
-  function startRec() {
-    if (!SR) return;
-    $("resultCard").hidden = true; hideNotice();
-    state.finals = []; state.sessionFinal = ""; state.interim = ""; state.fatal = false; state.stopping = false;
-    renderLive();
-    try { state.rec = newRecognizer(); state.rec.start(); }
-    catch (err) { showNotice("Couldn't start the microphone: " + err.message, true); return; }
-    state.recording = true; state.startT = Date.now();
-    $("micBtn").textContent = "Stop"; $("micBtn").classList.add("rec");
-    $("status").textContent = "Listening… tap Stop when you're done.";
-    state.tick = setInterval(function () {
-      var s = (Date.now() - state.startT) / 1000;
-      $("timer").textContent = fmt(s);
-      if (state.fatal) stopRec(true);
-      if (s > 300) stopRec(); // safety stop at 5 min
-    }, 250);
-  }
-
-  function stopRec(silent) {
-    if (!state.recording) return;
-    state.recording = false; state.stopping = !silent;
-    clearInterval(state.tick);
-    state.lastSeconds = (Date.now() - state.startT) / 1000;
-    $("micBtn").textContent = "Start"; $("micBtn").classList.remove("rec");
-    $("status").textContent = silent ? "" : "Scoring…";
-    try { state.rec && state.rec.stop(); } catch (e) {}
-    if (!silent) state.finishTimer = setTimeout(finishRec, 1800); // fallback if onend never fires
-  }
-
-  function finishRec() {
-    if (!state.stopping) return;
-    state.stopping = false; clearTimeout(state.finishTimer);
-    if (state.interim) { state.finals.push(state.interim); state.interim = ""; }
-    var text = fullText();
-    if (!text) {
-      $("status").textContent = "I didn't catch anything. Check your mic and try again — or type your answer.";
-      return;
-    }
-    $("status").textContent = "Done! See your feedback below.";
-    showResult(text, state.lastSeconds, false);
-  }
-
-  // ---------- Results ----------
-  function esc(s) { return s.replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function highlight(text, marks) {
     var t = text.replace(/[\u2018\u2019\u02BC]/g, "'"), out = "", pos = 0;
     marks.forEach(function (m) {
@@ -622,8 +1496,81 @@
   }
   function colorFor(s) { return s >= 75 ? "var(--good)" : s >= 50 ? "var(--ok)" : "var(--bad)"; }
 
+  // ======================================================================
+  // Mode switch
+  // ======================================================================
+  var mode = "quick";
+  function setMode(m) {
+    mode = m === "chat" ? "chat" : "quick";
+    $("quickSection").hidden = mode !== "quick";
+    $("convSection").hidden = mode !== "chat";
+    document.querySelectorAll(".mode").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.mode === mode)); });
+    lsSet(MKEY, mode);
+    if (mode === "quick") { if (convo) pauseChat(); }
+    else { if (Q.recording) qStop(true); }
+  }
+
+  // ======================================================================
+  // Quick practice
+  // ======================================================================
+  var Q = { cat: "party", idx: 0, recording: false, tick: null };
+
+  function showPrompt() {
+    $("prompt").textContent = PROMPTS[Q.cat][Q.idx];
+    $("hint").textContent = HINTS[Q.cat];
+    document.querySelectorAll(".tab").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.cat === Q.cat)); });
+  }
+  function setCat(cat) { Q.cat = cat; Q.idx = Math.floor(Math.random() * PROMPTS[cat].length); showPrompt(); resetAnswer(); }
+  function nextPrompt() { Q.idx = (Q.idx + 1) % PROMPTS[Q.cat].length; showPrompt(); resetAnswer(); }
+  function randomPrompt() {
+    var cats = Object.keys(PROMPTS), c, i;
+    do { c = cats[Math.floor(Math.random() * cats.length)]; i = Math.floor(Math.random() * PROMPTS[c].length); }
+    while (c === Q.cat && i === Q.idx);
+    Q.cat = c; Q.idx = i; showPrompt(); resetAnswer();
+  }
+  function resetAnswer() {
+    if (Q.recording) qStop(true);
+    $("live").textContent = ""; $("timer").textContent = "0:00"; $("typed").value = "";
+    $("status").textContent = SR ? "Tap Start and answer as if you were really there." : "Type your answer below.";
+  }
+  function renderLive(finalText, interim) {
+    var el = $("live"); el.textContent = "";
+    if (finalText) el.appendChild(document.createTextNode(finalText + " "));
+    if (interim) { var s = document.createElement("span"); s.className = "interim"; s.textContent = interim; el.appendChild(s); }
+  }
+  function qStart() {
+    if (!SR) return;
+    $("resultCard").hidden = true; hideNotice(); renderLive("", "");
+    var ok = Listener.start({
+      onUpdate: renderLive,
+      onError: function (msg) { showNotice(msg, true); qStop(true); },
+      onAbort: function () { qStop(true); },
+      onEnd: function (text, secs) {
+        if (!text) { $("status").textContent = "I didn't catch anything. Check your mic and try again, or type your answer."; return; }
+        $("status").textContent = "Done! See your feedback below.";
+        showResult(text, secs, false);
+      }
+    });
+    if (!ok) return;
+    Q.recording = true;
+    $("micBtn").textContent = "Stop"; $("micBtn").classList.add("rec");
+    $("status").textContent = "Listening… tap Stop when you're done.";
+    Q.tick = setInterval(function () {
+      var s = (Date.now() - Listener.startT) / 1000;
+      $("timer").textContent = fmt(s);
+      if (s > 300) qStop(false); // safety stop at 5 min
+    }, 250);
+  }
+  function qStop(silent) {
+    if (!Q.recording) return;
+    Q.recording = false; clearInterval(Q.tick);
+    $("micBtn").textContent = "Start"; $("micBtn").classList.remove("rec");
+    $("status").textContent = silent ? "" : "Scoring…";
+    if (silent) Listener.abort(); else Listener.stop();
+  }
+
   function showResult(text, seconds, typed) {
-    var r = CharismaScore.score({ text: text, seconds: typed ? null : seconds, category: state.cat, typed: typed });
+    var r = CharismaScore.score({ text: text, seconds: typed ? null : seconds, category: Q.cat, typed: typed });
     var ring = $("ring");
     ring.style.setProperty("--p", r.score); ring.style.setProperty("--c", colorFor(r.score));
     $("scoreNum").textContent = r.score;
@@ -646,12 +1593,253 @@
     $("resultCard").hidden = false;
     if (r.words >= 4) {
       var h = loadHist();
-      h.push({ t: Date.now(), cat: state.cat, prompt: PROMPTS[state.cat][state.idx], score: r.score });
+      h.push({ t: Date.now(), cat: Q.cat, prompt: PROMPTS[Q.cat][Q.idx], score: r.score });
       saveHist(h); renderHist();
     }
     setTimeout(function () { $("resultCard").scrollIntoView({ behavior: "smooth", block: "start" }); }, 50);
   }
 
+  // ======================================================================
+  // Conversation mode
+  // ======================================================================
+  var convo = null, personaId = "date", phase = "idle", silenceTimer = null, chatTick = null, ttsTimer = null;
+  var SILENCE_MS = 1800;
+  var muted = lsGet(MUTEKEY) === "1";
+  var handsFree = lsGet(HFKEY) !== "0";
+  var autoSend = lsGet(ASKEY) !== "0";
+
+  function renderPersonaPick() {
+    document.querySelectorAll(".persona").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.p === personaId)); });
+    var p = Chat.PERSONAS[personaId];
+    $("personaBio").textContent = p.emoji + " " + p.name + ": " + p.bio;
+  }
+
+  function setPhase(ph, msg) {
+    phase = ph;
+    var mic = $("cMic");
+    mic.classList.toggle("rec", ph === "listening");
+    mic.textContent = ph === "listening" ? "Stop" : "🎤 Talk";
+    mic.disabled = !SR || ph === "thinking" || ph === "ended";
+    $("cDone").disabled = ph !== "listening";
+    $("cSend").disabled = ph === "thinking" || ph === "ended";
+    $("cInput").disabled = ph === "ended";
+    if (msg !== undefined) $("cStatus").textContent = msg;
+  }
+
+  function scrollChat() { var el = $("chatLog"); el.scrollTop = el.scrollHeight; }
+
+  function addBubble(who, text, cls) {
+    var row = document.createElement("div");
+    row.className = "msg " + who + (cls ? " " + cls : "");
+    if (who === "them") {
+      var nm = document.createElement("div"); nm.className = "who"; nm.textContent = convo.persona.name; row.appendChild(nm);
+    }
+    var body = document.createElement("div"); body.className = "txt"; body.textContent = text; row.appendChild(body);
+    $("chatLog").appendChild(row); scrollChat();
+    return row;
+  }
+
+  function updateMood() {
+    if (!convo) return;
+    var p = convo.persona, el = $("mood"), last = convo.userTurns[convo.userTurns.length - 1];
+    var meh = p.kind !== "interview" && (convo.noAskStreak >= 2 || (last && last.flat));
+    el.textContent = meh ? "😐 " + p.name + " seems less interested" : (p.kind === "interview" ? "🙂 " + p.name + " is listening" : "😊 " + p.name + " is interested");
+    el.className = "mood" + (meh ? " meh" : "");
+  }
+
+  function renderChips(chips) {
+    var box = $("coachChips"); box.innerHTML = "";
+    if (!chips.length) { box.innerHTML = '<span class="chip info">Tips show up here while you talk</span>'; return; }
+    chips.forEach(function (c) {
+      var s = document.createElement("span"); s.className = "chip " + c.type;
+      s.textContent = (c.type === "good" ? "✓ " : c.type === "warn" ? "! " : "") + c.text; box.appendChild(s);
+    });
+  }
+  function coachCtx(typed) {
+    var last = convo.userTurns[convo.userTurns.length - 1];
+    var cur = convo.persona.kind === "interview" ? convo.persona.agenda[Math.min(convo.qIndex, convo.persona.agenda.length - 1)] : null;
+    return { category: convo.persona.category, prevPartner: Chat.lastPartnerText(convo), typed: typed,
+             lowEngagement: convo.persona.kind !== "interview" && convo.noAskStreak >= 2,
+             behavioral: !!(cur && cur.behavioral) };
+  }
+
+  // ---- Text to speech ----
+  function pickVoice(gender) {
+    if (!window.speechSynthesis) return null;
+    var lang = $("lang").value, vs = speechSynthesis.getVoices().filter(function (v) { return /^en/i.test(v.lang); });
+    if (!vs.length) return null;
+    var same = vs.filter(function (v) { return v.lang.replace("_", "-") === lang; });
+    var pool = same.length ? same : vs;
+    var fem = /female|samantha|victoria|karen|moira|tessa|zira|susan|serena|libby|sonia|aria|jenny|hazel|fiona|kate/i;
+    var mal = /\bmale\b|daniel|alex|fred|david|george|ryan|guy|arthur|oliver|thomas|mark|james/i;
+    var want = pool.filter(function (v) { return gender === "female" ? fem.test(v.name) : (mal.test(v.name) && !/female/i.test(v.name)); });
+    return want[0] || pool[0];
+  }
+  function speak(text, done) {
+    clearTimeout(ttsTimer);
+    var finished = false;
+    var fin = function () { if (finished) return; finished = true; clearTimeout(ttsTimer); done && done(); };
+    if (muted || !window.speechSynthesis || typeof SpeechSynthesisUtterance === "undefined") { setTimeout(fin, 50); return; }
+    try {
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = $("lang").value;
+      var v = pickVoice(convo ? convo.persona.voice : "female"); if (v) u.voice = v;
+      u.rate = 1.02; u.pitch = convo && convo.persona.voice === "male" ? 0.95 : 1.05;
+      u.onend = fin; u.onerror = fin;
+      speechSynthesis.speak(u);
+      // fallback if the browser never fires onend
+      ttsTimer = setTimeout(fin, 2500 + text.split(/\s+/).length * 420);
+    } catch (e) { fin(); }
+  }
+
+  function partnerSays(text) {
+    Chat.addPartner(convo, text);
+    addBubble("them", text);
+    setPhase("partner", muted ? "" : convo.persona.name + " is talking…");
+    speak(text, function () {
+      if (!convo || phase !== "partner") return;
+      setPhase("idle", SR ? (handsFree ? "" : "Tap 🎤 Talk to answer, or type below.") : "Type your answer below.");
+      if (handsFree && SR && !convo.ended) startListening();
+    });
+  }
+
+  function startChat() {
+    Listener.abort(); if (window.speechSynthesis) speechSynthesis.cancel();
+    convo = Chat.newConversation(personaId, (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0);
+    $("chatLog").innerHTML = ""; $("convSummary").hidden = true; $("chatCard").hidden = false;
+    $("pickCard").hidden = true;
+    $("chatTitle").textContent = convo.persona.emoji + " " + convo.persona.title + " with " + convo.persona.name;
+    $("cInput").value = ""; renderChips([]); updateMood(); hideGNotice();
+    $("cTimer").textContent = "0:00";
+    partnerSays(Chat.opener(convo));
+    $("chatCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  var liveRow = null;
+  function startListening() {
+    if (!SR || !convo || phase === "thinking" || phase === "ended") return;
+    phase = "starting"; clearTimeout(ttsTimer);
+    if (window.speechSynthesis) speechSynthesis.cancel();
+    hideNotice();
+    var ok = Listener.start({
+      onUpdate: function (fin, interim) {
+        var txt = (fin + " " + interim).trim();
+        if (!liveRow) liveRow = addBubble("me", "", "live");
+        liveRow.querySelector(".txt").textContent = txt || "…";
+        scrollChat();
+        renderChips(Chat.liveCoach(txt, Listener.speakingSeconds(), coachCtx(false)));
+      },
+      onError: function (msg) { showNotice(msg, true); stopListeningUI(); },
+      onAbort: function () { stopListeningUI(); },
+      onEnd: function (text, secs, speakSecs) {
+        clearInterval(chatTick);
+        if (!text) { removeLive(); setPhase("idle", "I didn't catch that. Tap 🎤 Talk to try again, or type."); return; }
+        submitUser(text, Math.max(1, Math.min(secs, speakSecs || secs)), false);
+      }
+    });
+    if (!ok) { setPhase("idle"); return; }
+    setPhase("listening", autoSend ? "Listening… I'll send it after a short pause." : "Listening… tap Done when you finish.");
+    renderChips(Chat.liveCoach("", 0, coachCtx(false)));
+    clearInterval(chatTick);
+    chatTick = setInterval(function () {
+      if (phase !== "listening") { clearInterval(chatTick); return; }
+      var heard = Listener.speakingSeconds();
+      $("cTimer").textContent = fmt((Date.now() - Listener.startT) / 1000);
+      if (Listener.firstHeard) renderChips(Chat.liveCoach(Listener.fullText(true), heard, coachCtx(false)));
+      if (autoSend && Listener.fullText(true) && Listener.lastHeard && Date.now() - Listener.lastHeard > SILENCE_MS) finishListening();
+      if ((Date.now() - Listener.startT) > 180000) finishListening(); // safety stop
+    }, 250);
+  }
+  function removeLive() { if (liveRow) { liveRow.remove(); liveRow = null; } }
+  function stopListeningUI() { clearInterval(chatTick); removeLive(); if (phase === "listening") setPhase("idle", "Tap 🎤 Talk to try again, or type."); }
+  function finishListening() {
+    if (phase !== "listening") return;
+    clearInterval(chatTick);
+    setPhase("thinking", "Got it…");
+    Listener.stop();
+  }
+
+  function submitUser(text, seconds, typed) {
+    if (!convo || convo.ended) return;
+    if (Listener.abort()) clearInterval(chatTick);
+    removeLive();
+    var row = addBubble("me", text);
+    var a = Chat.observeUser(convo, text, { seconds: typed ? null : seconds, typed: typed });
+    var vl = document.createElement("div"); vl.className = "vline " + a.verdict.tone; vl.textContent = a.verdict.text;
+    row.appendChild(vl);
+    var mk = row.querySelector(".txt"); mk.innerHTML = highlight(a.text, a.result.marks);
+    renderChips(Chat.liveCoach(text, seconds || 0, Object.assign(coachCtx(typed), { prevPartner: convo.messages.length > 1 ? convo.messages[convo.messages.length - 2].text : "" })));
+    updateMood();
+    setPhase("thinking", convo.persona.name + " is thinking…");
+    var typing = addBubble("them", "", "typing"); typing.querySelector(".txt").innerHTML = "<span></span><span></span><span></span>";
+    var key = lsGet(GKEY);
+    var started = Date.now();
+    Chat.partnerReply(convo, a, { apiKey: key, model: lsGet(GMKEY) || Chat.GEMINI_MODELS[0], fetch: key ? window.fetch.bind(window) : null })
+      .then(function (res) {
+        var wait = Math.max(0, (res.source === "rules" ? 700 : 0) - (Date.now() - started));
+        setTimeout(function () {
+          typing.remove();
+          if (!convo || convo.ended) return;
+          if (res.error) showGNotice("Smart replies didn't work (" + res.error + "). Using the free built-in replies for now.");
+          else if (res.source === "gemini") hideGNotice();
+          if (res.coach) { var c = document.createElement("div"); c.className = "vline tip2"; c.textContent = "💡 " + res.coach; row.appendChild(c); }
+          partnerSays(res.text);
+        }, wait);
+      });
+  }
+
+  function pauseChat() {
+    if (phase === "partner") phase = "idle";
+    Listener.abort(); clearInterval(chatTick); removeLive(); clearTimeout(ttsTimer);
+    if (window.speechSynthesis) speechSynthesis.cancel();
+    if (convo && !convo.ended && phase !== "thinking") setPhase("idle", "Paused. Tap 🎤 Talk or type to continue.");
+  }
+
+  function endChat() {
+    if (!convo) return;
+    convo.ended = true; phase = "ended";
+    Listener.abort(); clearInterval(chatTick); removeLive(); clearTimeout(ttsTimer);
+    if (window.speechSynthesis) speechSynthesis.cancel();
+    setPhase("ended", "Conversation ended.");
+    var s = Chat.summarize(convo);
+    var ring = $("cRing");
+    ring.style.setProperty("--p", s.score); ring.style.setProperty("--c", colorFor(s.score));
+    $("cScore").textContent = s.score;
+    $("cVerdict").textContent = s.verdict;
+    $("cMeta").textContent = s.turns ? (s.turns + " turn" + (s.turns === 1 ? "" : "s") + " · " + s.stats.asked + " question" + (s.stats.asked === 1 ? "" : "s") +
+      " asked · you talked " + s.stats.talkShare + "% of the time") : "No answers yet";
+    var fill = function (id, arr) { var ul = $(id); ul.innerHTML = ""; arr.forEach(function (t) { var li = document.createElement("li"); li.textContent = t; ul.appendChild(li); }); };
+    fill("cBest", s.best); fill("cWork", s.work);
+    $("convSummary").hidden = false;
+    if (s.turns >= 1) {
+      var h = loadHist();
+      h.push({ t: Date.now(), cat: "chat-" + convo.persona.id, prompt: "Conversation with " + convo.persona.name + " (" + s.turns + " turn" + (s.turns === 1 ? "" : "s") + ")", score: s.score });
+      saveHist(h); renderHist();
+    }
+    setTimeout(function () { $("convSummary").scrollIntoView({ behavior: "smooth", block: "start" }); }, 50);
+  }
+
+  function backToPick() {
+    pauseChat(); convo = null;
+    $("chatCard").hidden = true; $("convSummary").hidden = true; $("pickCard").hidden = false;
+  }
+
+  // ---- Settings (optional Gemini key) ----
+  function renderSettings() {
+    var key = lsGet(GKEY);
+    $("gStatus").textContent = key ? "Smart replies are ON (your Gemini key, model " + (lsGet(GMKEY) || Chat.GEMINI_MODELS[0]) + ")." : "Using the free built-in replies. No key needed.";
+    $("gStatus").className = "gstatus" + (key ? " on" : "");
+    $("gKey").value = ""; $("gKey").placeholder = key ? "Key saved (•••• " + key.slice(-4) + ")" : "Paste your Gemini API key";
+    $("gRemove").hidden = !key;
+    $("gModel").value = lsGet(GMKEY) || Chat.GEMINI_MODELS[0];
+  }
+  function showGNotice(msg) { var n = $("gNotice"); n.textContent = msg; n.hidden = false; }
+  function hideGNotice() { $("gNotice").hidden = true; }
+
+  // ======================================================================
+  // History
+  // ======================================================================
   function renderHist() {
     var h = loadHist(), list = $("hist");
     $("stCount").textContent = h.length;
@@ -675,16 +1863,21 @@
   }
 
   // ---------- Notices ----------
-  function showNotice(msg, err) { var n = $("notice"); n.textContent = msg; n.className = "notice" + (err ? " err" : ""); n.hidden = false; }
-  function hideNotice() { $("notice").hidden = true; }
+  function showNotice(msg, err) {
+    [$("notice"), $("cNotice")].forEach(function (n) { n.textContent = msg; n.className = "notice" + (err ? " err" : ""); n.hidden = false; });
+  }
+  function hideNotice() { $("notice").hidden = true; $("cNotice").hidden = true; }
 
-  // ---------- Wire up ----------
+  // ======================================================================
+  // Wire up
+  // ======================================================================
+  document.querySelectorAll(".mode").forEach(function (b) { b.addEventListener("click", function () { setMode(b.dataset.mode); }); });
   document.querySelectorAll(".tab").forEach(function (b) { b.addEventListener("click", function () { setCat(b.dataset.cat); }); });
   $("nextBtn").addEventListener("click", nextPrompt);
   $("nextBtn2").addEventListener("click", function () { nextPrompt(); window.scrollTo({ top: 0, behavior: "smooth" }); });
   $("randomBtn").addEventListener("click", randomPrompt);
   $("againBtn").addEventListener("click", function () { resetAnswer(); $("resultCard").hidden = true; window.scrollTo({ top: 0, behavior: "smooth" }); });
-  $("micBtn").addEventListener("click", function () { state.recording ? stopRec(false) : startRec(); });
+  $("micBtn").addEventListener("click", function () { Q.recording ? qStop(false) : qStart(); });
   $("typeToggle").addEventListener("click", function () {
     var tb = $("typebox"); tb.hidden = !tb.hidden;
     $("typeToggle").textContent = tb.hidden ? "Prefer to type your answer?" : "Hide typing box";
@@ -693,27 +1886,81 @@
   $("scoreTyped").addEventListener("click", function () {
     var t = $("typed").value.trim();
     if (!t) { $("typed").focus(); return; }
-    if (state.recording) stopRec(true);
+    if (Q.recording) qStop(true);
     showResult(t, null, true);
   });
   $("clearBtn").addEventListener("click", function () {
     if (confirm("Delete all saved attempts on this device?")) { saveHist([]); renderHist(); }
   });
-  var savedLang = null; try { savedLang = localStorage.getItem(LKEY); } catch (e) {}
+  var savedLang = lsGet(LKEY);
   if (savedLang) $("lang").value = savedLang;
-  $("lang").addEventListener("change", function () { try { localStorage.setItem(LKEY, $("lang").value); } catch (e) {} });
+  $("lang").addEventListener("change", function () { lsSet(LKEY, $("lang").value); });
+
+  // Conversation controls
+  document.querySelectorAll(".persona").forEach(function (b) { b.addEventListener("click", function () { personaId = b.dataset.p; renderPersonaPick(); }); });
+  $("startChat").addEventListener("click", startChat);
+  $("cMic").addEventListener("click", function () {
+    if (phase === "listening") finishListening();
+    else { clearTimeout(ttsTimer); startListening(); }
+  });
+  $("cDone").addEventListener("click", finishListening);
+  $("cForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var t = $("cInput").value.trim();
+    if (!t || phase === "thinking" || !convo || convo.ended) return;
+    phase = "typing";
+    if (window.speechSynthesis) speechSynthesis.cancel();
+    clearTimeout(ttsTimer);
+    $("cInput").value = "";
+    submitUser(t, null, true);
+  });
+  $("cInput").addEventListener("input", function () {
+    if (!convo || phase === "listening") return;
+    renderChips(Chat.liveCoach($("cInput").value, 0, coachCtx(true)));
+  });
+  $("cInput").addEventListener("focus", function () { if (phase === "listening") { Listener.abort(); stopListeningUI(); } });
+  $("endChat").addEventListener("click", endChat);
+  $("newChat").addEventListener("click", backToPick);
+  $("againChat").addEventListener("click", startChat);
+  $("muteBtn").addEventListener("click", function () {
+    muted = !muted; lsSet(MUTEKEY, muted ? "1" : "0");
+    $("muteBtn").textContent = muted ? "🔇" : "🔊"; $("muteBtn").title = muted ? "Voice off" : "Voice on";
+    if (muted && window.speechSynthesis) speechSynthesis.cancel();
+  });
+  $("muteBtn").textContent = muted ? "🔇" : "🔊";
+  $("hfBox").checked = handsFree; $("asBox").checked = autoSend;
+  $("hfBox").addEventListener("change", function () { handsFree = $("hfBox").checked; lsSet(HFKEY, handsFree ? "1" : "0"); });
+  $("asBox").addEventListener("change", function () { autoSend = $("asBox").checked; lsSet(ASKEY, autoSend ? "1" : "0"); });
+  // Settings
+  var gm = $("gModel");
+  Chat.GEMINI_MODELS.forEach(function (m) { var o = document.createElement("option"); o.value = m; o.textContent = m; gm.appendChild(o); });
+  $("gSave").addEventListener("click", function () {
+    var k = $("gKey").value.trim();
+    if (k) lsSet(GKEY, k);
+    lsSet(GMKEY, $("gModel").value);
+    renderSettings(); hideGNotice();
+  });
+  $("gRemove").addEventListener("click", function () { lsSet(GKEY, null); renderSettings(); hideGNotice(); });
+  if (window.speechSynthesis && speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = function () {};
 
   if (!SR) {
-    showNotice("Voice transcription isn't supported in this browser. For speaking practice, open this page in Google Chrome (Android or desktop). You can still type your answers below.", false);
+    showNotice("Voice-to-text isn't supported in this browser. For speaking practice, open this page in Google Chrome (Android or desktop). You can still type your answers.", false);
     $("micBtn").disabled = true;
     $("typebox").hidden = false; $("typeToggle").hidden = true;
+    $("cMic").disabled = true; $("hfRow").hidden = true;
   } else if (window.isSecureContext === false) {
-    showNotice("The microphone needs a secure page (https:// or a local file in desktop Chrome). If Start doesn't work, open this app from an https link — or type your answer.", false);
+    showNotice("The microphone needs a secure page (https://). If Talk doesn't work, open this app from its https link, or type your answer.", false);
   }
 
   setCat("party");
+  renderPersonaPick();
+  renderSettings();
   renderHist();
-  window.__cp = { showResult: showResult, setCat: setCat, state: state }; // for testing
+  setPhase("idle");
+  setMode(lsGet(MKEY) === "chat" ? "chat" : "quick");
+  // for automated tests
+  window.__cp = { showResult: showResult, setCat: setCat, Q: Q };
+  window.__chat = { get convo() { return convo; }, get phase() { return phase; }, startChat: startChat, endChat: endChat, Listener: Listener };
 })();
 </script>
 </body>
