@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14161c">
+<title>Charisma Practice</title>
+<style>
+  :root{
+    --bg:#14161c; --card:#1d2029; --card2:#252935; --line:#323746;
+    --text:#eef0f5; --muted:#9aa1b2; --accent:#6ea8ff; --accent2:#8b7bff;
+    --good:#4cd38a; --ok:#f2c14e; --bad:#ff6b6b; --filler:#ffb547; --hedge:#ff7fa8;
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);
+    font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-text-size-adjust:100%}
+  .wrap{max-width:760px;margin:0 auto;padding:16px 14px 40px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 2px 14px}
+  h1{font-size:1.35rem;margin:0;letter-spacing:.2px}
+  h1 span{color:var(--accent)}
+  .sub{color:var(--muted);font-size:.9rem;margin:2px 0 0}
+  select{background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:6px 8px;font-size:.85rem}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+  .card h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px;font-weight:600}
+  .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  button{font:inherit;cursor:pointer;border:none;border-radius:12px;color:var(--text);background:var(--card2);
+    padding:10px 12px;transition:background .15s,transform .05s;touch-action:manipulation}
+  button:active{transform:scale(.98)}
+  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .tab{border:1px solid var(--line);font-size:.92rem;padding:10px 6px}
+  .tab[aria-pressed="true"]{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;color:#0d0f14;font-weight:600}
+  .prompt{font-size:1.35rem;font-weight:600;line-height:1.35;margin:6px 0 8px;min-height:2.6em}
+  .hint{color:var(--muted);font-size:.9rem;margin:0 0 12px}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .row > button{flex:1 1 auto}
+  .btn-ghost{background:transparent;border:1px solid var(--line)}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0d0f14;font-weight:700}
+  .mic-area{display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 0 4px}
+  .mic{width:120px;height:120px;border-radius:50%;font-size:1.05rem;font-weight:700;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0d0f14;
+    box-shadow:0 6px 24px rgba(110,168,255,.25)}
+  .mic.rec{background:var(--bad);color:#fff;box-shadow:0 0 0 0 rgba(255,107,107,.6);animation:pulse 1.4s infinite}
+  .mic:disabled{opacity:.4;cursor:not-allowed;animation:none}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,107,107,.55)}70%{box-shadow:0 0 0 18px rgba(255,107,107,0)}100%{box-shadow:0 0 0 0 rgba(255,107,107,0)}}
+  .timer{font-variant-numeric:tabular-nums;font-size:1.6rem;font-weight:600}
+  .status{color:var(--muted);font-size:.9rem;text-align:center;min-height:1.4em}
+  .transcript{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;min-height:84px;
+    margin-top:10px;white-space:pre-wrap;word-wrap:break-word}
+  .transcript .interim{color:var(--muted)}
+  .transcript:empty::before{content:attr(data-placeholder);color:#5d6475}
+  .notice{background:#2b2418;border:1px solid #5a4a22;color:#f5dfa8;border-radius:12px;padding:10px 12px;font-size:.9rem;margin-bottom:10px}
+  .notice.err{background:#2c1a1e;border-color:#6a2b36;color:#ffc4cc}
+  textarea{width:100%;min-height:120px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:12px;
+    padding:12px;font:inherit;resize:vertical}
+  .typebox{margin-top:12px}
+  .typebox[hidden]{display:none}
+  .linkbtn{background:none;padding:6px 0;color:var(--accent);font-size:.92rem;text-decoration:underline}
+  .score-head{display:flex;align-items:center;gap:16px;margin-bottom:10px}
+  .ring{--p:0;--c:var(--good);width:96px;height:96px;border-radius:50%;flex:none;display:grid;place-items:center;
+    background:conic-gradient(var(--c) calc(var(--p)*1%),var(--card2) 0)}
+  .ring div{width:78px;height:78px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-size:1.7rem;font-weight:700}
+  .ring small{display:block;font-size:.65rem;color:var(--muted);font-weight:500;margin-top:-6px}
+  .verdict{font-size:1.15rem;font-weight:600}
+  .meta{color:var(--muted);font-size:.88rem}
+  ul.fb{list-style:none;padding:0;margin:8px 0 12px}
+  ul.fb li{padding:8px 10px;border-radius:10px;background:var(--card2);margin-bottom:6px;display:flex;gap:8px}
+  ul.fb li .ic{flex:none;width:1.2em;text-align:center}
+  .tip{background:#17263d;border:1px solid #2b4a78;border-radius:12px;padding:10px 12px;margin-bottom:12px}
+  .tip b{color:var(--accent)}
+  mark{border-radius:4px;padding:0 2px;color:#111}
+  mark.filler{background:var(--filler)}
+  mark.hedge{background:var(--hedge)}
+  .legend{font-size:.8rem;color:var(--muted);margin:6px 0 0}
+  .legend mark{font-size:.75rem}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  .stat{background:var(--card2);border-radius:12px;padding:10px;text-align:center}
+  .stat b{display:block;font-size:1.3rem}
+  .stat span{color:var(--muted);font-size:.8rem}
+  ol.hist{list-style:none;padding:0;margin:0}
+  ol.hist li{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line);font-size:.9rem}
+  ol.hist li:last-child{border-bottom:none}
+  .pill{flex:none;min-width:42px;text-align:center;border-radius:999px;padding:2px 8px;font-weight:700;color:#111}
+  .hist .p{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hist .d{color:var(--muted);font-size:.78rem;flex:none}
+  .empty{color:var(--muted);font-size:.9rem}
+  footer{color:#6c7386;font-size:.78rem;text-align:center;margin-top:18px;line-height:1.5}
+  @media (min-width:700px){ .prompt{font-size:1.55rem} .mic{width:132px;height:132px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Charisma <span>Practice</span></h1>
+      <p class="sub">Answer out loud. Get instant feedback. Free.</p>
+    </div>
+    <label><span class="sr" style="position:absolute;left:-9999px">Voice language</span>
+      <select id="lang" title="Speech language">
+        <option value="en-US">English (US)</option>
+        <option value="en-GB">English (UK)</option>
+        <option value="en-AU">English (AU)</option>
+        <option value="en-IN">English (IN)</option>
+      </select>
+    </label>
+  </header>
+
+  <!-- 1. Scenario -->
+  <section class="card" aria-labelledby="h-scn">
+    <h2 id="h-scn">1 · Pick a situation</h2>
+    <div class="tabs" role="group" aria-label="Category">
+      <button class="tab" data-cat="party" aria-pressed="true">🎉 Party</button>
+      <button class="tab" data-cat="date" aria-pressed="false">☕ Date</button>
+      <button class="tab" data-cat="interview" aria-pressed="false">💼 Interview</button>
+    </div>
+    <div class="prompt" id="prompt">…</div>
+    <p class="hint" id="hint"></p>
+    <div class="row">
+      <button class="btn-ghost" id="nextBtn">Next question →</button>
+      <button class="btn-ghost" id="randomBtn">🎲 Random</button>
+    </div>
+  </section>
+
+  <!-- 2. Answer -->
+  <section class="card" aria-labelledby="h-ans">
+    <h2 id="h-ans">2 · Answer out loud</h2>
+    <div id="notice" class="notice" hidden></div>
+    <div class="mic-area">
+      <button class="mic" id="micBtn" aria-live="polite">Start</button>
+      <div class="timer" id="timer">0:00</div>
+      <div class="status" id="status">Tap Start and answer as if you were really there.</div>
+    </div>
+    <div class="transcript" id="live" data-placeholder="Your words will appear here as you speak…" aria-live="polite"></div>
+    <button class="linkbtn" id="typeToggle">Prefer to type your answer?</button>
+    <div class="typebox" id="typebox" hidden>
+      <textarea id="typed" placeholder="Type what you would say…"></textarea>
+      <div class="row" style="margin-top:8px">
+        <button class="btn-primary" id="scoreTyped">Score my answer</button>
+      </div>
+      <p class="meta" style="margin:6px 0 0">Typed answers skip the speaking-pace check.</p>
+    </div>
+  </section>
+
+  <!-- 3. Result -->
+  <section class="card" id="resultCard" hidden aria-labelledby="h-res">
+    <h2 id="h-res">3 · Your feedback</h2>
+    <div class="score-head">
+      <div class="ring" id="ring"><div><span id="scoreNum">0</span><small>/100</small></div></div>
+      <div>
+        <div class="verdict" id="verdict"></div>
+        <div class="meta" id="resMeta"></div>
+      </div>
+    </div>
+    <ul class="fb" id="fbList"></ul>
+    <div class="tip" id="tip"></div>
+    <h2 style="margin-top:4px">What you said</h2>
+    <div class="transcript" id="marked"></div>
+    <p class="legend"><mark class="filler">filler</mark> &nbsp; <mark class="hedge">unsure / hedging</mark></p>
+    <div class="row" style="margin-top:12px">
+      <button class="btn-ghost" id="againBtn">↻ Try again</button>
+      <button class="btn-primary" id="nextBtn2">Next question →</button>
+    </div>
+  </section>
+
+  <!-- 4. Progress -->
+  <section class="card" aria-labelledby="h-prog">
+    <h2 id="h-prog">Your progress</h2>
+    <div class="stats">
+      <div class="stat"><b id="stCount">0</b><span>attempts</span></div>
+      <div class="stat"><b id="stBest">–</b><span>best</span></div>
+      <div class="stat"><b id="stAvg">–</b><span>average</span></div>
+    </div>
+    <ol class="hist" id="hist"></ol>
+    <div class="row" style="margin-top:10px">
+      <button class="btn-ghost" id="clearBtn" style="flex:0 0 auto;font-size:.85rem">Clear history</button>
+    </div>
+  </section>
+
+  <footer>
+    Free, no account, no tracking. Your history is saved only on this device.<br>
+    Voice-to-text uses your browser's built-in speech service (in Chrome this may be processed by Google).<br>
+    Scores are simple rule-based hints, not a judgement of you. Keep practising!
+  </footer>
+</div>
+
+<!-- ===================== Scoring logic (pure, testable) ===================== -->
+<script id="scoring">
+(function (root) {
+  "use strict";
+
+  var FILLER_RES = [
+    { re: /\b(?:u+m+|u+h+m*|e+r+m+|hmm+|ehm+)\b/gi, label: "um/uh" },
+    { re: /(?<!\b(?:do|did|don't|didn't|would|if|you|they|we|i)\s)\byou know\b/gi, label: "you know" },
+    { re: /(?<!\b(?:what|which|this|that|the|a|any|some|every|same|different|that's|my|your|his|her|our|their|these|those|all)\s)\b(?:sort|kind) of\b/gi, label: "kind of / sort of" },
+    { re: /\bbasically\b/gi, label: "basically" },
+    { re: /\bliterally\b/gi, label: "literally" },
+    { re: /(?<!\b(?:i|you|we|they|he|she|who|people|would|'d|i'd|you'd|we'd|they'd|really|don't|didn't|doesn't|do|does|did|to|feel|feels|felt|look|looks|looked|sound|sounds|seem|seems|things|stuff|also|still|always|never|might|will|i'll|not|much|more|most|just|exactly|something|anything|nothing|everything|places|foods?|kids|dogs?|cats?)\s)\blike\b/gi, label: "like" }
+  ];
+
+  var HEDGE_RES = [
+    { re: /\bi\s+(?:don't|do not|dont)\s+know\b|\bdunno\b/gi, label: "I don't know" },
+    { re: /\b(?:i'm|i am|im)?\s*not\s+(?:really\s+)?sure\b/gi, label: "not sure" },
+    { re: /\bi\s+guess\b/gi, label: "I guess" },
+    { re: /\bi\s+think\b/gi, label: "I think" },
+    { re: /\bi\s+suppose\b/gi, label: "I suppose" },
+    { re: /\bmaybe\b/gi, label: "maybe" },
+    { re: /\bprobably\b/gi, label: "probably" },
+    { re: /\bsorry\b/gi, label: "sorry" },
+    { re: /\bjust\b/gi, label: "just" },
+    { re: /\bwhatever\b/gi, label: "whatever" }
+  ];
+
+  var NUMBER_WORDS = /\b(?:two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty|fifty|hundred|thousand|million|dozen|half|first|second|third|percent)\b/gi;
+  var EXAMPLE_RE = /\b(?:for example|for instance|one time|the other day|last (?:week|weekend|month|year|summer|winter|spring|night|time|friday|saturday|sunday)|this (?:week|weekend|morning|summer|year)|when i was|i remember|specifically|in particular|such as|yesterday|recently)\b/gi;
+  var STORY_RE = /\b(?:saw|heard|smelled|smell|tasted|taste|felt|noticed|laughed|walked|hiked|cooked|ate|drove|built|created|made|led|managed|organi[sz]ed|fixed|solved|discovered|learned|learnt|visited|travel(?:l)?ed|started|finished|won|beautiful|delicious|loud|quiet|tiny|huge|sunny|rainy|cold|warm|bright|crazy|amazing|incredible|funny|beach|mountains?|kitchen|street|city|restaurant|team|project|customer|client)\b/gi;
+  var QUESTION_RE = /\b(?:what about you|how about you|and you|have you|do you|did you|are you|were you|would you|could you|can you|what(?:'s| is) yours|what(?:'s| is) your|what do you|how do you|where do you|how was your|how did you|what are you|where are you|tell me about your|is that something you|you ever)\b/i;
+  var RESULT_RE = /\b(?:result|results|resulted|outcome|learned|learnt|improved|increased|reduced|cut|saved|achieved|delivered|grew|launched|won|percent|so that|which meant|in the end|impact)\b|%/i;
+  var NOT_PROPER = /^(?:I|I'm|I've|I'd|I'll|Im|OK|Okay)$/;
+
+  function norm(t) { return String(t || "").replace(/[\u2018\u2019\u02BC]/g, "'").replace(/\s+/g, " ").trim(); }
+
+  function words(t) { return norm(t).match(/[A-Za-z0-9][A-Za-z0-9'\-]*/g) || []; }
+
+  // Returns non-overlapping marks: [{start,end,type,label,text}]
+  function findMarks(text) {
+    var t = String(text || "").replace(/[\u2018\u2019\u02BC]/g, "'");
+    var all = [];
+    function scan(list, type) {
+      list.forEach(function (p) {
+        p.re.lastIndex = 0; var m;
+        while ((m = p.re.exec(t)) !== null) {
+          var s = m.index, e = m.index + m[0].length;
+          var lead = m[0].length - m[0].replace(/^\s+/, "").length; s += lead;
+          if (e > s) all.push({ start: s, end: e, type: type, label: p.label, text: t.slice(s, e) });
+          if (m[0].length === 0) p.re.lastIndex++;
+        }
+      });
+    }
+    scan(HEDGE_RES, "hedge");
+    scan(FILLER_RES, "filler");
+    // longer (and hedges first on ties) win
+    all.sort(function (a, b) { return a.start - b.start || (b.end - b.start) - (a.end - a.start); });
+    var out = [], lastEnd = -1;
+    all.forEach(function (m) { if (m.start >= lastEnd) { out.push(m); lastEnd = m.end; } });
+    return out;
+  }
+
+  function countMatches(re, t) { re.lastIndex = 0; var m = t.match(re); return m ? m.length : 0; }
+
+  function properNouns(raw) {
+    // Capitalised words that are not at the start of a sentence
+    var t = norm(raw), n = 0, re = /([.!?]\s+|^)?\b([A-Z][a-z'\-]+|[A-Z]{2,})\b/g, m;
+    while ((m = re.exec(t)) !== null) {
+      if (m[1] !== undefined) continue; // sentence start
+      if (NOT_PROPER.test(m[2])) continue;
+      n++;
+    }
+    return n;
+  }
+
+  function tally(marks, type) {
+    var c = {};
+    marks.forEach(function (m) { if (m.type === type) { var k = m.label; c[k] = (c[k] || 0) + 1; } });
+    return c;
+  }
+  function tallyText(c) {
+    return Object.keys(c).sort(function (a, b) { return c[b] - c[a]; })
+      .map(function (k) { return "“" + k + "”" + (c[k] > 1 ? " ×" + c[k] : ""); }).join(", ");
+  }
+
+  function pick(arr, seed) { return arr[Math.abs(seed) % arr.length]; }
+
+  /**
+   * score({ text, seconds, category, typed })
+   *   seconds: speaking time (null/undefined for typed answers)
+   *   category: "party" | "date" | "interview"
+   */
+  function score(input) {
+    var text = norm(input.text);
+    var cat = input.category || "party";
+    var typed = !!input.typed || !(input.seconds > 0);
+    var w = words(text), n = w.length;
+    var secs = typed ? (n / 140) * 60 : input.seconds;
+    var lower = text.toLowerCase();
+    var marks = findMarks(text);
+    var fillers = marks.filter(function (m) { return m.type === "filler"; }).length;
+    var hedges = marks.filter(function (m) { return m.type === "hedge"; }).length;
+    var comps = [];
+    var per100 = function (x) { return n ? (x / n) * 100 : 0; };
+
+    if (n < 4) {
+      return {
+        score: n === 0 ? 0 : 10, words: n, seconds: input.seconds || null, wpm: null, typed: typed,
+        fillers: fillers, hedges: hedges, marks: marks, components: [],
+        feedback: ["We only caught " + n + " word" + (n === 1 ? "" : "s") + ". Try a full answer of at least 2–3 sentences."],
+        tip: "Aim for about 30–60 seconds: answer, give one real example, and (in social situations) ask something back.",
+        verdict: "Not enough to score yet"
+      };
+    }
+
+    // --- Pace (20) — spoken only
+    var wpm = typed ? null : Math.round(n / (secs / 60));
+    if (!typed) {
+      var ps, pm;
+      if (wpm >= 120 && wpm <= 160) { ps = 20; pm = "Great pace: " + wpm + " words per minute — easy to follow."; }
+      else if (wpm > 160 && wpm <= 185) { ps = 14; pm = "A little fast (" + wpm + " words/min). Aim for 120–160 so people can keep up."; }
+      else if (wpm >= 100 && wpm < 120) { ps = 15; pm = "Calm pace (" + wpm + " words/min). Slightly quicker (120–160) can sound more energetic."; }
+      else if (wpm > 185) { ps = 7; pm = "Quite fast (" + wpm + " words/min). Slow down and let your points land."; }
+      else if (wpm >= 80) { ps = 9; pm = "Slow pace (" + wpm + " words/min), maybe with long pauses. Aim for 120–160."; }
+      else { ps = 4; pm = "Very slow (" + wpm + " words/min) — lots of pausing. Try to keep talking in full sentences."; }
+      comps.push({ key: "pace", label: "Pace", got: ps, max: 20, msg: pm });
+    }
+
+    // --- Fillers (20)
+    var fr = per100(fillers), fs;
+    var fTxt = tallyText(tally(marks, "filler"));
+    var fm;
+    if (fillers === 0) { fs = 20; fm = "No filler words — clean and clear."; }
+    else if (fr <= 2) { fs = 16; fm = "Only " + fillers + " filler word" + (fillers > 1 ? "s" : "") + " (" + fTxt + "). Nice control."; }
+    else if (fr <= 4) { fs = 11; fm = fillers + " filler words (" + fTxt + "). Try a short pause instead."; }
+    else if (fr <= 7) { fs = 6; fm = "Lots of filler words: " + fTxt + ". They make you sound less sure."; }
+    else { fs = 2; fm = "Filler words everywhere (" + fTxt + "). Slow down and pause silently instead."; }
+    if (fillers === 1 && fs < 16) { fs = 16; fm = "Just 1 filler word (" + fTxt + "). Nice control."; }
+    if (fillers === 2 && fs < 11) { fs = 11; fm = "2 filler words (" + fTxt + "). Try a short pause instead."; }
+    comps.push({ key: "fillers", label: "Filler words", got: fs, max: 20, msg: fm });
+
+    // --- Confidence / hedging (20)
+    var hr = per100(hedges), hs, hm;
+    var hTxt = tallyText(tally(marks, "hedge"));
+    if (hedges === 0) { hs = 20; hm = "Confident wording — no hedging phrases."; }
+    else if (hr <= 2) { hs = 15; hm = "Mostly confident. Small hedge: " + hTxt + "."; }
+    else if (hr <= 5) { hs = 9; hm = "Some unsure phrases (" + hTxt + "). Say it like you mean it."; }
+    else { hs = 3; hm = "Lots of hedging (" + hTxt + ") — it makes you sound unsure of yourself."; }
+    if (hedges === 1 && hs < 15) { hs = 15; hm = "Mostly confident. One small hedge: " + hTxt + "."; }
+    if (hedges === 2 && hs < 10) { hs = 10; hm = "A couple of unsure phrases (" + hTxt + "). Say it like you mean it."; }
+    comps.push({ key: "confidence", label: "Confidence", got: hs, max: 20, msg: hm });
+
+    // --- Specificity (20)
+    var nums = countMatches(/\b\d+(?:[.,]\d+)?\b/g, text) + countMatches(NUMBER_WORDS, lower);
+    var props = properNouns(input.text);
+    var ex = countMatches(EXAMPLE_RE, lower);
+    var story = countMatches(STORY_RE, lower);
+    var sp = 2 + 3 * Math.min(nums, 2) + 3 * Math.min(props, 3) + 4 * Math.min(ex, 2) + 2 * Math.min(story, 3);
+    sp = Math.min(20, sp);
+    var spm;
+    if (sp >= 16) spm = "Specific and vivid — real details make you memorable.";
+    else if (sp >= 10) spm = "Some good detail. One more concrete thing (a name, place or number) would make it stick.";
+    else spm = "Quite general. Add a concrete detail: a name, a place, a number or a short story.";
+    comps.push({ key: "specific", label: "Specific details", got: sp, max: 20, msg: spm });
+
+    // --- Length (10)
+    var ls, lm, s = Math.round(secs);
+    var lenTxt = typed ? "about " + s + "s if spoken" : s + "s";
+    if (secs < 8) { ls = 1; lm = "Very short (" + lenTxt + "). Give people more to work with."; }
+    else if (secs < 15) { ls = 4; lm = "A bit short (" + lenTxt + "). Add one example or detail."; }
+    else if (secs <= 90) { ls = 10; lm = "Good length (" + lenTxt + ")."; }
+    else if (secs <= 120) { ls = 6; lm = "A bit long (" + lenTxt + "). Keep social answers under about 90 seconds."; }
+    else { ls = 3; lm = "Too long (" + lenTxt + "). Aim for 30–90 seconds, then hand the conversation back."; }
+    comps.push({ key: "length", label: "Length", got: ls, max: 10, msg: lm });
+
+    // --- Social: ask back (10) / Interview: show a result (10)
+    if (cat === "interview") {
+      var hasRes = RESULT_RE.test(lower);
+      comps.push({ key: "result", label: "Result", got: hasRes ? 10 : 3, max: 10,
+        msg: hasRes ? "You talked about a result or what you learned — interviewers love that."
+                    : "No clear result. End with what happened because of you (a number if possible)." });
+    } else {
+      var asked = /\?/.test(text) || QUESTION_RE.test(lower);
+      comps.push({ key: "askback", label: "Asked back", got: asked ? 10 : 2, max: 10,
+        msg: asked ? "You asked a question back — that keeps the conversation flowing."
+                   : "You didn't ask anything back. End with a question so it's a conversation, not an interview." });
+    }
+
+    var got = 0, max = 0;
+    comps.forEach(function (c) { got += c.got; max += c.max; });
+    var total = Math.round((got / max) * 100);
+    if (n < 15) total = Math.min(total, 55); // a one-liner can't score high
+    // "Excellent" (85+) requires no badly weak area
+    if (comps.some(function (c) { return c.got / c.max < 0.4; })) total = Math.min(total, 84);
+
+    // --- Feedback: 1–2 strengths + weakest areas, 3–5 lines total
+    var byRatio = comps.slice().sort(function (a, b) { return a.got / a.max - b.got / b.max; });
+    var weak = byRatio.filter(function (c) { return c.got / c.max < 0.75; }).slice(0, 3);
+    var PRAISE = ["specific", "askback", "result", "confidence", "fillers", "pace", "length"];
+    var strong = comps.filter(function (c) { return c.got / c.max >= 0.75; }).sort(function (a, b) {
+      return PRAISE.indexOf(a.key) - PRAISE.indexOf(b.key); });
+    var lines = [];
+    strong.slice(0, weak.length >= 3 ? 1 : 2).forEach(function (c) { lines.push({ ok: true, text: c.msg }); });
+    weak.forEach(function (c) { lines.push({ ok: false, text: c.msg }); });
+    var i = 0;
+    while (lines.length < 3 && i < comps.length) {
+      var c = byRatio[i++];
+      if (!lines.some(function (l) { return l.text === c.msg; })) lines.push({ ok: c.got / c.max >= 0.75, text: c.msg });
+    }
+    lines = lines.slice(0, 5);
+
+    var TIPS = {
+      pace: ["Speak in short sentences and take a breath after each one — it naturally sets a good pace.",
+             "Record a 30-second answer and count: about 70 words is the sweet spot."],
+      fillers: ["When you feel an “um” coming, close your mouth and pause for one second. Silence sounds confident.",
+                "Pick your first sentence before you start talking — most fillers happen at the very beginning."],
+      confidence: ["Drop “I think” and “maybe” once: say “I love hiking” instead of “I guess I kind of like hiking”.",
+                   "Replace “sorry” with “thanks” — “Thanks for waiting” sounds stronger than “Sorry I'm late”."],
+      specific: ["Use the “one real detail” rule: name a place, a person, a number or a moment (“last Saturday in Utrecht…”).",
+                 "Swap a general word for a picture: not “I like food” but “I make a mean Thai green curry”."],
+      length: ["Use answer → example → handoff: one sentence answer, one short story, then pass the ball back.",
+               "Aim for 30–60 seconds. Long enough for a story, short enough to stay a conversation."],
+      askback: ["Finish with a hook question: “…what about you — are you more of a beach or city person?”",
+                "Ask something linked to what they said earlier — it shows you were listening."],
+      result: ["Use STAR: Situation, Task, Action, Result. Spend most time on Action and finish with a number.",
+               "End your story with impact: “…which cut waiting time by 30%” or “…and I learned to ask for help earlier.”"]
+    };
+    var weakest = byRatio[0];
+    var tip = byRatio[0].got / byRatio[0].max >= 0.9
+      ? "Great answer! Next time, try the same question with a different story to build flexibility."
+      : pick(TIPS[weakest.key], n + (input.seconds ? Math.round(input.seconds) : 0));
+
+    var verdict = total >= 85 ? "Excellent — very charismatic!" : total >= 70 ? "Good answer!" :
+                  total >= 50 ? "Decent — room to grow" : "Keep practising";
+
+    return { score: total, words: n, seconds: input.seconds || null, wpm: wpm, typed: typed,
+             fillers: fillers, hedges: hedges, marks: marks, components: comps,
+             feedback: lines.map(function (l) { return (l.ok ? "✓ " : "• ") + l.text; }),
+             feedbackItems: lines, tip: tip, verdict: verdict };
+  }
+
+  var api = { score: score, findMarks: findMarks, words: words };
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  else root.CharismaScore = api;
+})(this);
+</script>
+
+<!-- ===================== App / UI ===================== -->
+<script id="app">
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+
+  var PROMPTS = {
+    party: [
+      "So, what do you do?",
+      "How do you know the host?",
+      "Have you been up to anything fun lately?",
+      "What's the best thing that happened to you this week?",
+      "Where are you from originally?",
+      "Any plans for the weekend?",
+      "Seen any good films or series recently?",
+      "What do you like to do when you're not working?",
+      "Been anywhere interesting this year?",
+      "What's something you're looking forward to?"
+    ],
+    date: [
+      "Tell me a bit about yourself.",
+      "What does a perfect weekend look like for you?",
+      "What's something you're really passionate about?",
+      "What's the most spontaneous thing you've ever done?",
+      "What are you most proud of?",
+      "If you could live anywhere for a year, where would it be?",
+      "What's your favourite way to spend an evening?",
+      "What's on your bucket list?",
+      "What made you smile today?",
+      "What's a small thing that makes you really happy?"
+    ],
+    interview: [
+      "Tell me about yourself.",
+      "Why do you want this job?",
+      "What is your greatest strength?",
+      "What's a weakness you're working on?",
+      "Tell me about a time you solved a difficult problem.",
+      "Describe a time you disagreed with a colleague. What happened?",
+      "Where do you see yourself in five years?",
+      "Tell me about a mistake you made and what you learned.",
+      "Why should we hire you?",
+      "Tell me about a time you worked under pressure."
+    ]
+  };
+  var HINTS = {
+    party: "Tip: answer, add one fun detail, then ask something back.",
+    date: "Tip: be warm and specific, share a little story, and ask them too.",
+    interview: "Tip: try STAR — Situation, Task, Action, Result. Finish with a result."
+  };
+  var CAT_NAMES = { party: "Party", date: "Date", interview: "Interview" };
+
+  var HKEY = "charismaPractice.history.v1", LKEY = "charismaPractice.lang";
+  var state = { cat: "party", idx: 0, recording: false, startT: 0, tick: null,
+                finals: [], sessionFinal: "", interim: "", rec: null, stopping: false, lastSeconds: 0 };
+
+  // ---------- Storage ----------
+  function loadHist() { try { return JSON.parse(localStorage.getItem(HKEY)) || []; } catch (e) { return []; } }
+  function saveHist(h) { try { localStorage.setItem(HKEY, JSON.stringify(h.slice(-500))); } catch (e) {} }
+
+  // ---------- Prompts ----------
+  function showPrompt() {
+    $("prompt").textContent = PROMPTS[state.cat][state.idx];
+    $("hint").textContent = HINTS[state.cat];
+    document.querySelectorAll(".tab").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.cat === state.cat));
+    });
+  }
+  function setCat(cat) { state.cat = cat; state.idx = Math.floor(Math.random() * PROMPTS[cat].length); showPrompt(); resetAnswer(); }
+  function nextPrompt() { state.idx = (state.idx + 1) % PROMPTS[state.cat].length; showPrompt(); resetAnswer(); }
+  function randomPrompt() {
+    var cats = Object.keys(PROMPTS), c, i;
+    do { c = cats[Math.floor(Math.random() * cats.length)]; i = Math.floor(Math.random() * PROMPTS[c].length); }
+    while (c === state.cat && i === state.idx);
+    state.cat = c; state.idx = i; showPrompt(); resetAnswer();
+  }
+  function resetAnswer() {
+    if (state.recording) stopRec(true);
+    state.finals = []; state.sessionFinal = ""; state.interim = "";
+    $("live").textContent = ""; $("timer").textContent = "0:00";
+    $("typed").value = "";
+    $("status").textContent = SR ? "Tap Start and answer as if you were really there." : "Type your answer below.";
+  }
+
+  // ---------- Speech ----------
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var isAndroid = /Android/i.test(navigator.userAgent);
+
+  function fmt(s) { s = Math.floor(s); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
+  function fullText() { return state.finals.concat([state.sessionFinal]).join(" ").replace(/\s+/g, " ").trim(); }
+  function renderLive() {
+    var el = $("live"); el.textContent = "";
+    var f = fullText();
+    if (f) el.appendChild(document.createTextNode(f + " "));
+    if (state.interim) { var s = document.createElement("span"); s.className = "interim"; s.textContent = state.interim; el.appendChild(s); }
+  }
+
+  function newRecognizer() {
+    var r = new SR();
+    r.lang = $("lang").value;
+    r.interimResults = true;
+    // Android Chrome repeats text in continuous mode, so use short sessions and auto-restart.
+    r.continuous = !isAndroid;
+    r.maxAlternatives = 1;
+    r.onresult = function (e) {
+      var fin = "", inter = "";
+      for (var i = 0; i < e.results.length; i++) {
+        var t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) fin += t + " "; else inter += t;
+      }
+      state.sessionFinal = fin.trim(); state.interim = inter.trim();
+      renderLive();
+    };
+    r.onerror = function (e) {
+      if (e.error === "no-speech" || e.error === "aborted") return;
+      var msg = {
+        "not-allowed": "Microphone blocked. Allow mic access for this page (tap the 🔒 icon in the address bar). If you opened the file directly on a phone, open it from an https:// link instead.",
+        "service-not-allowed": "Speech recognition isn't allowed here. Try Chrome, and open the page over https://.",
+        "audio-capture": "No microphone found. Check that your mic is connected and not used by another app.",
+        "network": "Speech recognition needs an internet connection (Chrome sends audio to its speech service)."
+      }[e.error] || ("Speech error: " + e.error);
+      showNotice(msg, true);
+      state.fatal = true;
+    };
+    r.onend = function () {
+      if (state.sessionFinal) state.finals.push(state.sessionFinal);
+      if (state.interim && (state.stopping || isAndroid)) state.finals.push(state.interim); // keep unfinished words
+      state.sessionFinal = ""; state.interim = "";
+      renderLive();
+      if (state.recording && !state.stopping && !state.fatal) {
+        try { state.rec = newRecognizer(); state.rec.start(); } catch (err) {}
+      } else if (state.stopping) {
+        finishRec();
+      }
+    };
+    return r;
+  }
+
+  function startRec() {
+    if (!SR) return;
+    $("resultCard").hidden = true; hideNotice();
+    state.finals = []; state.sessionFinal = ""; state.interim = ""; state.fatal = false; state.stopping = false;
+    renderLive();
+    try { state.rec = newRecognizer(); state.rec.start(); }
+    catch (err) { showNotice("Couldn't start the microphone: " + err.message, true); return; }
+    state.recording = true; state.startT = Date.now();
+    $("micBtn").textContent = "Stop"; $("micBtn").classList.add("rec");
+    $("status").textContent = "Listening… tap Stop when you're done.";
+    state.tick = setInterval(function () {
+      var s = (Date.now() - state.startT) / 1000;
+      $("timer").textContent = fmt(s);
+      if (state.fatal) stopRec(true);
+      if (s > 300) stopRec(); // safety stop at 5 min
+    }, 250);
+  }
+
+  function stopRec(silent) {
+    if (!state.recording) return;
+    state.recording = false; state.stopping = !silent;
+    clearInterval(state.tick);
+    state.lastSeconds = (Date.now() - state.startT) / 1000;
+    $("micBtn").textContent = "Start"; $("micBtn").classList.remove("rec");
+    $("status").textContent = silent ? "" : "Scoring…";
+    try { state.rec && state.rec.stop(); } catch (e) {}
+    if (!silent) state.finishTimer = setTimeout(finishRec, 1800); // fallback if onend never fires
+  }
+
+  function finishRec() {
+    if (!state.stopping) return;
+    state.stopping = false; clearTimeout(state.finishTimer);
+    if (state.interim) { state.finals.push(state.interim); state.interim = ""; }
+    var text = fullText();
+    if (!text) {
+      $("status").textContent = "I didn't catch anything. Check your mic and try again — or type your answer.";
+      return;
+    }
+    $("status").textContent = "Done! See your feedback below.";
+    showResult(text, state.lastSeconds, false);
+  }
+
+  // ---------- Results ----------
+  function esc(s) { return s.replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function highlight(text, marks) {
+    var t = text.replace(/[\u2018\u2019\u02BC]/g, "'"), out = "", pos = 0;
+    marks.forEach(function (m) {
+      out += esc(t.slice(pos, m.start)) + '<mark class="' + m.type + '" title="' + m.type + '">' + esc(t.slice(m.start, m.end)) + "</mark>";
+      pos = m.end;
+    });
+    return out + esc(t.slice(pos));
+  }
+  function colorFor(s) { return s >= 75 ? "var(--good)" : s >= 50 ? "var(--ok)" : "var(--bad)"; }
+
+  function showResult(text, seconds, typed) {
+    var r = CharismaScore.score({ text: text, seconds: typed ? null : seconds, category: state.cat, typed: typed });
+    var ring = $("ring");
+    ring.style.setProperty("--p", r.score); ring.style.setProperty("--c", colorFor(r.score));
+    $("scoreNum").textContent = r.score;
+    $("verdict").textContent = r.verdict;
+    var meta = [r.words + " words"];
+    if (!typed) meta.push(fmt(seconds)); else meta.push("typed");
+    if (r.wpm) meta.push(r.wpm + " wpm");
+    meta.push(r.fillers + " filler" + (r.fillers === 1 ? "" : "s"));
+    meta.push(r.hedges + " hedge" + (r.hedges === 1 ? "" : "s"));
+    $("resMeta").textContent = meta.join(" · ");
+    var ul = $("fbList"); ul.innerHTML = "";
+    (r.feedbackItems || r.feedback.map(function (f) { return { ok: false, text: f }; })).forEach(function (f) {
+      var li = document.createElement("li");
+      li.innerHTML = '<span class="ic">' + (f.ok ? "✅" : "👉") + "</span><span></span>";
+      li.lastChild.textContent = f.text; ul.appendChild(li);
+    });
+    $("tip").innerHTML = "<b>Try this next time:</b> ";
+    $("tip").appendChild(document.createTextNode(r.tip));
+    $("marked").innerHTML = highlight(text, r.marks);
+    $("resultCard").hidden = false;
+    if (r.words >= 4) {
+      var h = loadHist();
+      h.push({ t: Date.now(), cat: state.cat, prompt: PROMPTS[state.cat][state.idx], score: r.score });
+      saveHist(h); renderHist();
+    }
+    setTimeout(function () { $("resultCard").scrollIntoView({ behavior: "smooth", block: "start" }); }, 50);
+  }
+
+  function renderHist() {
+    var h = loadHist(), list = $("hist");
+    $("stCount").textContent = h.length;
+    if (!h.length) {
+      $("stBest").textContent = "–"; $("stAvg").textContent = "–";
+      list.innerHTML = '<li class="empty">No attempts yet. Your scores will show up here.</li>'; return;
+    }
+    var best = Math.max.apply(null, h.map(function (x) { return x.score; }));
+    var avg = Math.round(h.reduce(function (a, x) { return a + x.score; }, 0) / h.length);
+    $("stBest").textContent = best; $("stAvg").textContent = avg;
+    list.innerHTML = "";
+    h.slice(-15).reverse().forEach(function (x) {
+      var li = document.createElement("li"), d = new Date(x.t);
+      li.innerHTML = '<span class="pill"></span><span class="p"></span><span class="d"></span>';
+      li.children[0].textContent = x.score; li.children[0].style.background = colorFor(x.score);
+      li.children[1].textContent = (CAT_NAMES[x.cat] || "") + " · " + x.prompt;
+      li.children[2].textContent = d.toLocaleDateString(undefined, { day: "numeric", month: "short" }) + " " +
+        d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+      list.appendChild(li);
+    });
+  }
+
+  // ---------- Notices ----------
+  function showNotice(msg, err) { var n = $("notice"); n.textContent = msg; n.className = "notice" + (err ? " err" : ""); n.hidden = false; }
+  function hideNotice() { $("notice").hidden = true; }
+
+  // ---------- Wire up ----------
+  document.querySelectorAll(".tab").forEach(function (b) { b.addEventListener("click", function () { setCat(b.dataset.cat); }); });
+  $("nextBtn").addEventListener("click", nextPrompt);
+  $("nextBtn2").addEventListener("click", function () { nextPrompt(); window.scrollTo({ top: 0, behavior: "smooth" }); });
+  $("randomBtn").addEventListener("click", randomPrompt);
+  $("againBtn").addEventListener("click", function () { resetAnswer(); $("resultCard").hidden = true; window.scrollTo({ top: 0, behavior: "smooth" }); });
+  $("micBtn").addEventListener("click", function () { state.recording ? stopRec(false) : startRec(); });
+  $("typeToggle").addEventListener("click", function () {
+    var tb = $("typebox"); tb.hidden = !tb.hidden;
+    $("typeToggle").textContent = tb.hidden ? "Prefer to type your answer?" : "Hide typing box";
+    if (!tb.hidden) $("typed").focus();
+  });
+  $("scoreTyped").addEventListener("click", function () {
+    var t = $("typed").value.trim();
+    if (!t) { $("typed").focus(); return; }
+    if (state.recording) stopRec(true);
+    showResult(t, null, true);
+  });
+  $("clearBtn").addEventListener("click", function () {
+    if (confirm("Delete all saved attempts on this device?")) { saveHist([]); renderHist(); }
+  });
+  var savedLang = null; try { savedLang = localStorage.getItem(LKEY); } catch (e) {}
+  if (savedLang) $("lang").value = savedLang;
+  $("lang").addEventListener("change", function () { try { localStorage.setItem(LKEY, $("lang").value); } catch (e) {} });
+
+  if (!SR) {
+    showNotice("Voice transcription isn't supported in this browser. For speaking practice, open this page in Google Chrome (Android or desktop). You can still type your answers below.", false);
+    $("micBtn").disabled = true;
+    $("typebox").hidden = false; $("typeToggle").hidden = true;
+  } else if (window.isSecureContext === false) {
+    showNotice("The microphone needs a secure page (https:// or a local file in desktop Chrome). If Start doesn't work, open this app from an https link — or type your answer.", false);
+  }
+
+  setCat("party");
+  renderHist();
+  window.__cp = { showResult: showResult, setCat: setCat, state: state }; // for testing
+})();
+</script>
+</body>
+</html>
