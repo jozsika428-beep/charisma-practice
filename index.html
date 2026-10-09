@@ -147,6 +147,17 @@
   .listen i:nth-child(1),.listen i:nth-child(5){height:calc(4px + 7px * var(--lvl))}
   .listen span{margin-left:6px;font-size:.78rem;color:var(--muted);align-self:center}
   .linkbtn{background:none;border:0;padding:4px 0;color:var(--accent);font:inherit;font-size:.85rem;text-decoration:underline;cursor:pointer}
+  .coachsum{font-size:.9rem;color:#ffc56b;margin:4px 0 12px}
+  .msg.coachc{align-self:stretch;max-width:100%;background:rgba(255,197,107,.10);border:1px solid rgba(255,197,107,.55);border-radius:14px;padding:10px 12px;color:var(--text)}
+  .msg.coachc .who{color:#ffc56b;font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:.7rem;margin-bottom:4px}
+  .msg.coachc.sev3{background:rgba(255,107,107,.10);border-color:rgba(255,120,120,.6)} .msg.coachc.sev3 .who{color:#ff9b9b}
+  .msg.coachc.praise{background:rgba(76,211,138,.08);border-color:rgba(76,211,138,.45);padding:8px 12px} .msg.coachc.praise .who{color:#7ee2a8}
+  .msg.coachc .cmsg{font-size:.92rem}
+  .msg.coachc .csug{margin-top:6px;font-size:.88rem;color:var(--text);opacity:.92} .msg.coachc .csug span{color:var(--muted);display:block;font-size:.76rem;margin-bottom:2px}
+  .msg.coachc .cbtns{display:flex;gap:8px;margin-top:8px}
+  .cbtn{border-radius:999px;padding:7px 14px;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--text)}
+  .cbtn.try{background:#ffc56b;color:#1a1300;border-color:#ffc56b}
+  .msg.coachc.done{opacity:.7}
   .review{margin-top:10px;background:var(--card2);border-radius:12px;padding:10px}
   .review label{font-size:.8rem;color:var(--muted)}
   .review textarea{width:100%;box-sizing:border-box;margin-top:6px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;resize:vertical}
@@ -306,6 +317,10 @@
         <label id="hfLabel"><input type="checkbox" id="hfBox"> Listen automatically after they talk</label>
         <label id="sorLabel"><input type="checkbox" id="sorBox"> Send as soon as I let go</label>
       </div>
+      <div class="opts" id="coachSet">
+        <label>Coach <select id="coachLevel"><option value="off">Off</option><option value="light">Light (only big mistakes)</option><option value="normal">Normal</option><option value="strict">Strict</option></select></label>
+        <label><input type="checkbox" id="coachVoice"> Read coach tips aloud</label>
+      </div>
     </section>
 
     <section class="card" id="convSummary" hidden aria-labelledby="h-sum">
@@ -321,6 +336,7 @@
       <ul class="plain best" id="cBest"></ul>
       <h2>Work on next time</h2>
       <ul class="plain work" id="cWork"></ul>
+      <p class="coachsum" id="cCoach"></p>
       <div class="row">
         <button class="btn-ghost" id="newChat">Pick another partner</button>
         <button class="btn-primary" id="againChat">↻ Talk again</button>
@@ -437,7 +453,7 @@
     // Capitalised words that are not at the start of a sentence
     var t = norm(raw), n = 0, re = /([.!?]\s+|^)?\b([A-Z][a-z'\-]+|[A-Z]{2,})\b/g, m;
     while ((m = re.exec(t)) !== null) {
-      if (m[1] !== undefined) continue; // sentence start
+      if (m[1] !== undefined || m.index === 0) continue; // sentence start (an optional ^ group never captures at index 0)
       if (NOT_PROPER.test(m[2])) continue;
       n++;
     }
@@ -1323,7 +1339,11 @@
     var reply = convo.persona.kind === "interview" ? interviewReply(convo, a) : socialReply(convo, a);
     var prev = lastPartnerText(convo), tries = 0;
     while ((reply === prev || !reply) && tries++ < 5) reply = convo.persona.kind === "interview" ? interviewReply(convo, a) : socialReply(convo, a);
-    return reply || pick(convo, "generic", GENERIC_REACT);
+    reply = reply || pick(convo, "generic", GENERIC_REACT);
+    // after a crucial mistake the partner sounds a bit cooler (see the coach module)
+    var Co = root.CharismaCoach;
+    if (Co && a && a.mistake) reply = Co.reflect(convo, a, reply);
+    return reply;
   }
 
   function nextAgendaTopic(convo, avoid) {
@@ -1647,12 +1667,18 @@
       "\nStyle: " + (p.style || "natural and friendly") + ". Sound like a real person talking: contractions, small opinions, little stories from your life, the odd joke. " +
       "React to a specific word or detail they said. Remember what they told you earlier and sometimes refer back to it. Don't end every reply with a question; sometimes share something and leave space. Mix short and longer replies. " +
       "\nRules: stay in character, never mention being an AI. Reply in 1 to 3 short, casual spoken sentences (no emojis, no lists, no stage directions). Never be rude, sexual or offensive. " +
-      "Also write a short coaching note for the user about their last message (max 15 words, plain simple English: one good thing or one thing to fix). " +
-      'Respond ONLY with JSON: {"reply": "...", "coach": "..."}';
+      "If the user's last message was a real social mistake (for example a crude or pushy comment, ignoring your question, a one-word answer, a long monologue, only asking questions, putting themselves down, complaining" +
+      (p.kind === "interview" ? ", badmouthing an old employer, no example or result, saying they don't know, asking about pay first" : ", a heavy topic like an ex or politics too early") +
+      "), react naturally and a bit cooler in your reply, but stay polite. " +
+      "\nAlso act as a separate friendly coach for the user. Only flag a real mistake that matters" + (convo.coachLevel === "light" ? " (only serious ones)" : convo.coachLevel === "strict" ? " (smaller ones too)" : "") +
+      ", never nitpick, and be encouraging. If there is one: coach.mistake = true, severity 1 (small), 2 (clear) or 3 (serious), message = one short plain sentence naming the mistake (max 20 words), " +
+      "suggestion = one example line the user could say instead, based on what they said (max 25 words). Otherwise coach.mistake = false." +
+      (convo.coachHint ? " (A simple rule check thinks the last message may show: " + convo.coachHint + ". It may be wrong.)" : "") +
+      '\nRespond ONLY with JSON: {"reply": "...", "coach": {"mistake": false, "severity": 0, "message": "", "suggestion": ""}}';
     var contents = [{ role: "user", parts: [{ text: "(The conversation starts. Say your first line.)" }] }];
     convo.messages.forEach(function (m) {
       var role2 = m.from === "them" ? "model" : "user";
-      var txt = m.from === "them" ? JSON.stringify({ reply: m.text, coach: "" }) : m.text;
+      var txt = m.from === "them" ? JSON.stringify({ reply: m.text, coach: { mistake: false } }) : m.text;
       var last = contents[contents.length - 1];
       if (last.role === role2) last.parts[0].text += "\n" + txt; else contents.push({ role: role2, parts: [{ text: txt }] });
     });
@@ -1673,7 +1699,8 @@
     var reply = norm(obj.reply || "");
     if (!reply) throw new Error("no reply text");
     if (reply.length > 600) reply = reply.slice(0, 600);
-    return { reply: reply, coach: norm(obj.coach || "").slice(0, 160) };
+    var co = obj.coach;
+    return { reply: reply, coach: typeof co === "string" ? norm(co).slice(0, 160) : "", coachObj: co && typeof co === "object" ? co : null };
   }
 
   // Returns a Promise of { text, coach, source: "gemini"|"rules", error? }. Never rejects.
@@ -1710,7 +1737,7 @@
           if (g.reply.toLowerCase().indexOf(key) >= 0) { convo.qIndex = i; break; }
         }
       }
-      return { text: g.reply, coach: g.coach, source: "gemini" };
+      return { text: g.reply, coach: g.coach, coachObj: g.coachObj, source: "gemini" };
     }).catch(function (err) {
       clearTimeout(timer);
       var msg = err && err.name === "AbortError" ? "timed out" : (err && err.message) || "failed";
@@ -1738,6 +1765,391 @@
 </script>
 
 <!-- ===================== App / UI ===================== -->
+<script id="coach">
+(function (root) {
+  "use strict";
+  // In-chat coach: spots crucial mistakes in a turn, builds a short card with an example line,
+  // lets the user redo the turn (Try again), and keeps a record for the summary.
+  var Chat = root.CharismaChat;
+  function norm(t) { return String(t || "").replace(/[\u2018\u2019\u02BC]/g, "'").replace(/\s+/g, " ").trim(); }
+  function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+  function words(t) { return norm(t).match(/[A-Za-z0-9][A-Za-z0-9'\-]*/g) || []; }
+  function count(re, t) { return (String(t).match(re) || []).length; }
+  function sentences(t) { return norm(t).split(/(?<=[.!?])\s+/).filter(Boolean); }
+  // first sentence, shortened at a comma when possible
+  function snippet(t, n) {
+    n = n || 12;
+    var s = (sentences(t)[0] || norm(t)).replace(/[.!?]+$/, ""), w = s.split(" ");
+    if (w.length > n) {
+      var parts = s.split(/,\s*/), acc = "";
+      for (var i = 0; i < parts.length; i++) { var nx = acc ? acc + ", " + parts[i] : parts[i]; if (nx.split(" ").length > n) break; acc = nx; }
+      s = acc && acc.split(" ").length >= 4 ? acc + "." : w.slice(0, n).join(" ") + "…";
+    } else s += ".";
+    return cap(s.replace(/[,;:]\.$/, "."));
+  }
+  function lowFirst(s) { return /^(?:I|I'm|I've|I'd|I'll)\b/.test(s) || /^[A-Z][a-z]+ [A-Z]/.test(s) ? s : s.charAt(0).toLowerCase() + s.slice(1); }
+  function q(t) { return "“" + t + "”"; }
+
+  var LEVELS = { off: 99, light: 3, normal: 2, strict: 1 };
+  var LABELS = {
+    crude: "too forward", pushy: "pushy", slur: "offensive word", badmouth: "badmouthing a past job", idkCore: "“I don't know” to a key question",
+    heavy: "heavy topic too early", ignored: "skipped their question", monologue: "very long turn", interrogate: "too many questions",
+    flat: "very short answer", noAsk: "no question back", selfdep: "putting yourself down", sorry: "apologising a lot", idk: "“I don't know” again",
+    negative: "complaining", payFirst: "pay or holidays first", noResult: "story without a result", noExample: "no real example",
+    self: "only about yourself", hedge: "lots of hedging", swear: "swearing", ai: "coach note"
+  };
+  var PRIORITY = ["slur", "crude", "badmouth", "pushy", "idkCore", "heavy", "ignored", "monologue", "interrogate", "flat", "noAsk", "selfdep",
+                  "sorry", "idk", "negative", "payFirst", "noResult", "noExample", "self", "hedge", "swear"];
+
+  // ---------------- word lists ----------------
+  var SLUR = /\b(?:whore|slut|cunt|retard(?:ed)?|fag\w*)\b/i;
+  var CRUDE = /\b(?:sexy|sex|in bed|hook ?up|sleep with (?:me|you)|body count|nice (?:body|ass|boobs|tits|legs)|your (?:boobs|ass|tits)|come home with me|your place or mine|back to (?:my|your) place|naked|horny|take (?:it|that|your \w+) off)\b/i;
+  var PUSHY = /\b(?:give me your (?:number|phone(?: number)?|insta\w*)|kiss me|you have to (?:come|go out|kiss)|you owe me|just say yes|come on,? just)\b/i;
+  var SWEAR = /\b(?:fuck\w*|shit\w*|bitch\w*|dick|bastard|asshole)\b/gi;
+  var HEAVY = [
+    { k: "ex", re: /\b(?:my|your) ex\b(?![- ]?(?:colleague|boss|job))|\bex[- ](?:girlfriend|boyfriend|wife|husband|partner)\b|\bdivorc\w*|\bbroke up with me\b/i },
+    { k: "money", re: /\bhow much (?:do |did )?you (?:earn|make|get paid)\b|\byour (?:salary|income)\b|\bare you rich\b/i },
+    { k: "politics", re: /\b(?:politic\w*|vote[ds]?|voting|election|immigra\w*|religio\w*|abortion|left[- ]wing|right[- ]wing)\b/i },
+    { k: "personal", re: /\bwhy are you (?:still )?single\b|\bdo you want (?:kids|children)\b|\bhow many (?:kids|children) do you want\b|\bhow much do you weigh\b|\byour weight\b|\bwhen was your last relationship\b|\bhow old are you really\b/i }
+  ];
+  var SELFDEP = /\b(?:i'?m|i am) (?:so |really |pretty |kind of |a bit |just )?(?:boring|awkward|weird|ugly|stupid|dumb|a loser|useless|bad at (?:this|talking|conversations?|dating)|not (?:very |that |really )?(?:interesting|good at (?:this|talking))|not that interesting)\b|\bi have nothing (?:interesting )?to say\b|\bnothing (?:interesting|special) about me\b|\bmy life is (?:so |really )?boring\b/i;
+  var IDK = /\b(?:i (?:don'?t|do not) know|i dunno|idk|no idea|not sure really)\b/gi;
+  var NEG = /\b(?:hate[ds]?|terrible|awful|horrible|sucks?|sucked|annoying|annoyed|worst|stupid|can'?t stand|sick of|tired of|fed up|depressing|miserable|rubbish|crap|ugh|useless|pointless|boring)\b/gi;
+  var BADMOUTH = /\b(?:boss|manager|employer|company|colleagues?|team|supervisor|management|coworkers?)\b[^.?!]{0,40}\b(?:terrible|awful|horrible|idiots?|stupid|incompetent|useless|toxic|lazy|clueless|the worst|sucked|a joke|a mess|hopeless)\b|\b(?:terrible|awful|horrible|stupid|incompetent|useless|toxic|lazy|clueless|worst|hated (?:my|the|that))\s+(?:\w+\s)?(?:boss|manager|employer|company|colleagues?|team|job|supervisor|management)\b/i;
+  var PAY = /\b(?:salary|pay|paid|money|holidays?|vacation|days off|time off|leave days|bonus|how much (?:do|would|will) i (?:earn|make|get))\b/i;
+  var HEDGES = /\b(?:maybe|i guess|kind of|kinda|sort of|probably|i think|perhaps|a bit|i mean)\b/gi;
+  var YESNO = /^(?:yes|yeah|yep|yup|no|nope|nah|not really|sure|definitely|of course|absolutely|i do|i don'?t|i did|i didn'?t|i have|i haven'?t|i am|i'?m not|not yet|never|sometimes|kind of|sort of)\b/i;
+  var BROAD_Q = { day: 1, weekend: 1, host: 1, general: 1, name: 1, age: 1 };
+  var RELATED = [["work", "study"], ["city", "travel"], ["hobbies", "sport", "music", "movies", "food", "travel", "weekend"], ["family", "pets"], ["goals", "work", "travel", "study"]];
+  function related(x, y) { return x === y || RELATED.some(function (g) { return g.indexOf(x) >= 0 && g.indexOf(y) >= 0; }); }
+
+  function lastQuestion(text) {
+    var ss = sentences(text).filter(function (s) { return /\?$/.test(s); });
+    return ss.length ? ss[ss.length - 1] : "";
+  }
+  function stem(w) { return w.toLowerCase().replace(/'s$/, "").slice(0, 5); }
+  var STOP = /^(?:about|there|their|these|those|would|could|should|which|where|what|when|while|with|have|your|yours|you're|that|this|from|they|them|then|than|just|like|really|some|been|were|does|doing|going|thing|things|actually|kind|much|more|very|into|also|okay|right|well|yeah|tell)$/i;
+  function contentStems(t) { var o = {}; words(t).forEach(function (w) { if (w.length >= 4 && !STOP.test(w)) o[stem(w)] = 1; }); return o; }
+
+  // ---------------- example lines (tailored) ----------------
+  var ASKBACK = { work: "What do you do?", study: "What did you study?", travel: "Where's the best place you've been?", food: "What's your go-to dish?",
+    music: "What are you listening to lately?", sport: "Do you do any sports?", hobbies: "What do you do for fun?", movies: "Seen anything good lately?",
+    pets: "Are you more of a dog or a cat person?", family: "Do you have any siblings?", city: "Where did you grow up?", weekend: "Any plans for the weekend?",
+    goals: "What's on your list for this year?", day: "How's your day been?", host: "How do you know Lisa?" };
+  var DETAIL = { day: "I spent the morning fixing my bike and somehow it still makes a weird noise.", work: "I'm in logistics, and the best part is when a crazy day still works out.",
+    pets: "No pets right now, but I'd love a dog one day.", travel: "Last year I did a few days in Ghent and loved it.", food: "I make a mean pasta, if I say so myself.",
+    music: "Lately I've had the same album on repeat all week.", sport: "I try to run twice a week, mostly along the river.", hobbies: "I've been getting into photography a bit.",
+    movies: "I just finished a Danish crime series and I'm a bit obsessed.", city: "I grew up in a small town near Utrecht.", weekend: "This weekend I'm finally seeing friends I haven't seen in ages.",
+    family: "I have one sister and we're pretty close.", study: "I studied business, but honestly I learned more from side jobs.", goals: "I want to learn Spanish properly this year.",
+    host: "I know Lisa from my old job, we used to have lunch together every day.", general: "Honestly, it's been a pretty good week." };
+  var SHARE = { travel: "I just got back from a weekend in Ghent and I'm already planning the next trip.", music: "I've had the same album on repeat all week.",
+    food: "I tried making ramen last night, which was a disaster, haha.", work: "My week at work was chaos, in a fun way.", sport: "I started bouldering last month and my arms hate me.",
+    hobbies: "I've been getting into photography lately.", movies: "I just binged a whole series in two days.", pets: "I really want a dog, but my flat is tiny.",
+    city: "I grew up in a small town, so the city still feels big to me.", family: "My sister just had a baby, so I'm an uncle now.", general: "I've had a pretty fun week, actually." };
+  var IDK_SOCIAL = { travel: "“Ooh, good one. Probably Japan, I'd love to see Kyoto. You?”", food: "“Hmm, probably pasta. I could eat it every day. You?”",
+    music: "“Hard to pick! Lately mostly indie stuff. What about you?”", hobbies: "“Good question. Probably cycling, it clears my head. You?”",
+    general: "“Good question, let me think... Probably something simple, like a long walk with good music. What about you?”" };
+  var LIGHT_Q = { date: "What's the best thing you've done this month?", party: "So how do you know Lisa?", interview: "What does a typical week look like in this role?" };
+  var I_IDK = [
+    [/yourself/, "“Sure. I studied logistics, and for the last two years I've planned deliveries at a supermarket chain. I like solving puzzles under time pressure.”"],
+    [/apply|role/, "“I like solving planning puzzles, and Northwind is growing fast, so I think I could learn a lot here.”"],
+    [/problem/, "“Last year our deliveries kept running late. I made a new schedule with the drivers, and in two months the delays dropped by 40%.”"],
+    [/strength/, "“I stay calm under pressure. For example, when a truck broke down last month I rerouted everything within an hour.”"],
+    [/disagreed/, "“A colleague and I disagreed about a planning change. We sat down, compared the numbers, and agreed to test both ways for a week.”"],
+    [/improving/, "“I'm working on saying no to extra tasks when I'm already busy. I now check my planning before I agree.”"],
+    [/years/, "“I'd like to be leading a small planning team, and still learning every year.”"],
+    [/questions/, "“Yes, what does a typical week look like for this team?”"]
+  ];
+
+  // ---------------- detectors ----------------
+  function detect(convo, a) {
+    var p = convo.persona, kind = p.kind === "interview" ? "interview" : p.id, social = kind !== "interview", her = p.voice === "female" ? "her" : "him", she = p.voice === "female" ? "she" : "he";
+    var t = a.text, lower = t.toLowerCase(), n = a.words, turn = convo.userTurns.length;
+    var prev = convo.userTurns[convo.userTurns.length - 2] || null;
+    var prevPartner = "";
+    for (var i = convo.messages.length - 2; i >= 0; i--) if (convo.messages[i].from === "them") { prevPartner = convo.messages[i].text; break; }
+    var pq = lastQuestion(prevPartner);
+    var pqTopic = pq ? (Chat.detectTopics(pq)[0] || null) : null;
+    if (pq && /\bwhat do you do\b|\bfor a living\b/i.test(pq)) pqTopic = "work";
+    if (pq && /\bfor fun\b|\bfree time\b|\bspare time\b|\bhobb/i.test(pq)) pqTopic = "hobbies";
+    var statement = a.question && a.questionText ? t.slice(0, Math.max(0, t.indexOf(a.questionText))) : t;
+    var out = [];
+    var add = function (id, sev, message, suggestion) { out.push({ type: "mistake", id: id, severity: sev, label: LABELS[id], message: message, suggestion: suggestion || "" }); };
+
+    // offensive / too forward
+    if (SLUR.test(t)) add("slur", 3, "That word is offensive and would end most conversations on the spot.", q(snippet(t.replace(SLUR, "").replace(/\s+/g, " "), 14)));
+    if (social && CRUDE.test(t)) add("crude", 3, "That comes across as too forward and could make " + her + " uncomfortable.",
+      kind === "date" ? q("I'm really enjoying talking with you.") : q("Ha, this is a fun party. " + LIGHT_Q.party));
+    if (social && PUSHY.test(t)) add("pushy", kind === "date" ? 3 : 2, "Pushing like that puts pressure on " + her + ". Let " + her + " choose.",
+      q("I've really enjoyed this. Would you like to do it again sometime?"));
+    var sw = count(SWEAR, t);
+    if (sw && !SLUR.test(t)) add("swear", kind === "interview" ? 3 : (kind === "date" ? 2 : 1), "The swearing makes it sound rough" + (kind === "interview" ? " for an interview." : " here."),
+      q(snippet(t.replace(SWEAR, "").replace(/\s+/g, " "), 14)));
+
+    // heavy topics too early (date), lighter at a party
+    if (social) {
+      HEAVY.forEach(function (h) {
+        if (!h.re.test(t)) return;
+        var early = turn <= 6;
+        var sev = kind === "date" ? (early ? 2 : 1) : (h.k === "personal" || h.k === "ex" ? 1 : (early ? 1 : 0));
+        if (!sev) return;
+        var what = { ex: "Bringing up an ex", money: "Asking about money", politics: "Politics or religion", personal: "A very personal question like that" }[h.k];
+        add("heavy", sev, what + " this early can feel heavy" + (kind === "date" ? " on a first date." : " at a party."), "Keep it light for now, for example: " + q(LIGHT_Q[kind]));
+      });
+    }
+
+    // interview-specific
+    if (!social) {
+      var cur = a.interviewQ || "";
+      var idkN = count(IDK, t);
+      if (BADMOUTH.test(t)) add("badmouth", 3, "Talking badly about a past employer makes interviewers wonder what you'd say about them.",
+        q("It wasn't the right fit for me, and it taught me what kind of team I work best in."));
+      if (idkN && n < 20 && !a.question && !/questions for me/i.test(cur)) {
+        var ex = I_IDK.filter(function (x) { return x[0].test(cur.toLowerCase()); })[0];
+        add("idkCore", 3, "“I don't know” on a key question costs you. Take a breath and give your best answer.", ex ? ex[1] : q("Good question. Let me think... I'd say..."));
+      }
+      if (a.question && PAY.test(a.questionText || t)) {
+        var askedBefore = convo.userTurns.slice(0, -1).some(function (u) { return u.question; });
+        if (!askedBefore) add("payFirst", 2, "Asking about pay or holidays first can sound like that's all you care about. Save it for later.",
+          "Start with the role, like: " + q(LIGHT_Q.interview));
+      }
+      if (a.behavioral && !a.question && n >= 12) {
+        var sig = a.signals, story = sig.story > 0 || sig.examples > 0 || sig.nums > 0 || /\b(?:once|last (?:year|month|week)|when i|at my (?:last|old|previous)|there was a time)\b/i.test(lower);
+        if (!story) add("noExample", 2, "That answer is general. Give one real example: what happened, what you did.",
+          q(snippet(t, 10) + " For example, last year at work I ... and in the end ..."));
+        else if (!sig.result) add("noResult", 2, "Good story, but it's missing the ending. Say what changed in the end, ideally with a number.",
+          q("… and in the end " + (/late|delay/i.test(lower) ? "the delays dropped by about a third." : "it worked: we saved a few hours every week.")));
+      }
+      if (!a.behavioral && /strength/i.test(cur) && !a.question && n >= 4 && n < 40 && !a.detail) add("noExample", 1, "Back up your strength with a quick example.",
+        q(snippet(t, 10) + " For example, when ..."));
+    }
+
+    // ignored the partner's question (social; only clear cases)
+    if (social && pq && !a.questionOnly && n >= 3 && !YESNO.test(lower) && pqTopic && !BROAD_Q[pqTopic]) {
+      var ansTopics = Chat.detectTopics(statement);
+      var qs = contentStems(pq), as = contentStems(statement), overlap = Object.keys(qs).some(function (k) { return as[k]; });
+      if (ansTopics.length && !ansTopics.some(function (x) { return related(x, pqTopic); }) && !overlap) {
+        add("ignored", 2, p.name + " asked " + q(pq) + " and your answer skipped it. Answer first, then add your thing.",
+          q((DETAIL[pqTopic] || DETAIL.general) + " And " + lowFirst(snippet(statement, 10))));
+      }
+    }
+
+    // very long turn / only about himself
+    var longT = social ? ((a.seconds && a.seconds > 60) || n > 150) : ((a.seconds && a.seconds > 120) || n > 260);
+    if (longT) add("monologue", 2, "That was a long turn" + (a.seconds ? " (about " + Math.round(a.seconds) + " s)" : " (" + n + " words)") + ". Give the short version, then hand it back.",
+      q(snippet(t, 10) + " Long story short, it worked out. " + (social ? ASKBACK[a.topic] || "What about you?" : "")).replace(" ”", "”"));
+    if (social && !longT && n >= 50 && !a.question && !/\byou\b|\byour\b/i.test(t) && count(/\b(?:i|me|my|i'm|i've|i'd)\b/gi, t) / n > 0.09)
+      add("self", 1, "That was all about you. Bring " + her + " in with a question.", q(snippet(t, 10) + " " + (ASKBACK[a.topic] || "What about you?")));
+
+    // interrogating
+    var qCount = count(/\?/g, t);
+    // voice transcripts have no "?": count question openers instead
+    if (!/[.?!]/.test(t)) qCount = Math.max(qCount, count(/\b(?:(?:where|what|why|how|who|which|when)\s+(?:are|is|do|did|was|were|would|can|could|have)\s+you|(?:do|did|are|have|would|can|could)\s+you)\b/gi, t));
+    if (qCount >= 3) add("interrogate", social ? 2 : 1, "That's a lot of questions at once. It can feel like an interview. Ask one, and share something too.",
+      q((SHARE[detectFirstTopic(t)] || SHARE.general) + " " + (sentences(t).filter(function (s) { return /\?$/.test(s); })[0] || "What about you?")));
+    else if (social && a.questionOnly && prev && prev.questionOnly)
+      add("interrogate", 2, "Two turns of only questions. Share something about yourself too, so it's a conversation.",
+        q((SHARE[a.qTopic] || SHARE[detectFirstTopic(t)] || SHARE.general) + " " + (a.questionText || "What about you?")));
+
+    // flat
+    var flatNow = !a.question && (n <= 2 || (a.flat && n <= 4 && /^(?:yes|yeah|yep|no|nope|ok|okay|fine|good|nothing|not much|not really|sure|cool|nice|same|alright|dunno|maybe|pretty good)\b/i.test(lower)));
+    if (flatNow) {
+      var sev = pq || !/^(?:nice|cool|haha|ha|wow|great|okay|ok|true|same|lol|aww)\b/i.test(lower) ? 2 : 1;   // "Nice!" after a story is a reaction, not a dodge
+      if (!social) sev = 2;
+      var pmTopic = Chat.detectTopics(prevPartner)[0];
+      var top = pqTopic && DETAIL[pqTopic] ? pqTopic : (pmTopic && DETAIL[pmTopic] && ASKBACK[pmTopic] ? pmTopic : (!pq ? "day" : null));
+      add("flat", sev, social ? "That's a very short answer. Add one detail so " + she + " has something to work with." : "That's too short for an interview. Give a full answer with an example.",
+        social ? (top ? q(cap(t.replace(/[.!]+$/, "")) + ". " + DETAIL[top] + " " + (ASKBACK[top] || "What about you?"))
+                      : q(cap(t.replace(/[.!]+$/, "")) + "! [One real detail: where, who, or what happened.] What about you?")) :
+          ((I_IDK.filter(function (x) { return x[0].test((a.interviewQ || "").toLowerCase()); })[0] || [0, q("Sure. For example, ...")])[1]));
+    } else if (!a.question && prev && prev.flat && a.flat && n < 5)
+      add("flat", 2, "Two very short answers in a row. Give " + her + " a bit more to work with.", q(cap(t.replace(/[.!]+$/, "")) + ". " + DETAIL[pqTopic && DETAIL[pqTopic] ? pqTopic : "general"] + " What about you?"));
+
+    // no question back
+    if (social && !a.question && (convo.noAskStreak === 2 || convo.noAskStreak === 5 || convo.noAskStreak === 8) && !flatNow)
+      add("noAsk", 2, "You haven't asked " + her + " anything for " + convo.noAskStreak + " turns. Turn it around with a question.",
+        q(snippet(statement, 12) + " " + (ASKBACK[a.topic] || "What about you?")));
+
+    // self-deprecation, sorry, I don't know
+    if (SELFDEP.test(t)) add("selfdep", 2, "Putting yourself down makes it awkward for " + her + " too. You're more interesting than you think.",
+      q("I'm a bit quiet at first, but get me talking about " + ({ music: "music", travel: "travel", food: "food", sport: "sport", movies: "films", work: "my work" }[a.topic] || "something I love") + " and I won't stop."));
+    if (count(/\bsorry\b/gi, t) >= 2 || (social && /\bsorry\b/i.test(t) && prev && /\bsorry\b/i.test(prev.text)))
+      add("sorry", 2, "You don't need to apologise. Just say it.", q(snippet(t.replace(/\b(?:i'?m |so )*sorry,?\s*/gi, ""), 14)));
+    var idkCount = count(IDK, t);
+    if (social && (idkCount >= 2 || (idkCount && prev && count(IDK, prev.text))))
+      add("idk", 2, "“I don't know” again. Pick something, anything. A guess is more fun than a shrug.", IDK_SOCIAL[pqTopic] || IDK_SOCIAL.general);
+
+    // negativity streak
+    var negN = count(NEG, t), negNow = negN >= 2 || (negN >= 1 && n <= 20);
+    var prevNeg = prev && (count(NEG, prev.text) >= 2 || (count(NEG, prev.text) >= 1 && prev.words <= 20));
+    if (social && negNow && prevNeg) add("negative", 2, "That's two complaints in a row. It can pull the mood down. Add something you enjoy.",
+      q(snippet(t, 8) + " But honestly, the best part of my week was a really good coffee with a friend."));
+    else if (social && negN >= 4) add("negative", 1, "Lots of negative words in one go. Balance it with something good.", q(snippet(t, 8) + " But the good part was..."));
+
+    // hedging
+    if (count(HEDGES, t) >= 4 && n < 120) add("hedge", 1, "Lots of “maybe”, “I guess”, “kind of”. Say it like you mean it.",
+      q(snippet(t.replace(HEDGES, "").replace(/\s+,/g, ",").replace(/\s+/g, " "), 14)));
+
+    out.sort(function (x, y) { return y.severity - x.severity || PRIORITY.indexOf(x.id) - PRIORITY.indexOf(y.id); });
+    var seen = {};
+    return out.filter(function (m) { if (seen[m.id]) return false; seen[m.id] = 1; return true; });
+  }
+  function detectFirstTopic(t) { var s = sentences(t).filter(function (x) { return /\?$/.test(x); })[0] || t; return Chat.detectTopics(s)[0] || "general"; }
+
+  function praiseFor(convo, a) {
+    var p = convo.persona, her = p.voice === "female" ? "her" : "his";
+    if (p.kind === "interview") {
+      if (a.behavioral && a.signals.result && a.words >= 15) return "Nice, you ended with a clear result. That's what interviewers remember.";
+      return "";
+    }
+    if (a.question && a.followUp && a.followUp.length) {
+      var w = a.followUp.slice().sort(function (x, y) { return y.length - x.length; })[0];
+      return "Nice, you followed up on " + her + " " + w + ". That's how you build connection.";
+    }
+    if (a.question && !a.questionOnly && a.detail && a.words >= 12) return "Great move: a real detail plus a question back. That's the rhythm.";
+    return "";
+  }
+
+  // ---------------- state, observe, undo ----------------
+  var SKIP = { persona: 1, rng: 1, said: 1, coach: 1, _snap: 1, used: 1 };
+  function snapshot(convo) {
+    var s = {};
+    Object.keys(convo).forEach(function (k) {
+      if (SKIP[k]) return;
+      var v = convo[k];
+      s[k] = Array.isArray(v) ? v.slice() : (v && typeof v === "object") ? Object.assign({}, v) : v;
+    });
+    return s;
+  }
+  function state(convo) { return convo.coach || (convo.coach = { log: [], praise: 0, lastPraise: -9, pending: null, retries: 0 }); }
+
+  // Like Chat.observeUser, plus mistake detection. a.mistakes (sorted), a.mistake (top one with severity >= 2, used by the partner's reaction).
+  function observe(convo, text, opts) {
+    var st = state(convo);
+    var snap = snapshot(convo);
+    var a = Chat.observeUser(convo, text, opts);
+    convo._snap = snap;
+    a.mistakes = detect(convo, a);
+    a.mistake = a.mistakes.filter(function (m) { return m.severity >= 2; })[0] || null;
+    convo.coachHint = a.mistake ? a.mistake.label : "";
+    if (st.pending) {
+      var pend = st.pending; st.pending = null;
+      a.redo = true;
+      a.fixedRetry = !a.mistakes.some(function (m) { return m.id === pend.id; });
+      if (pend.entry) pend.entry.fixed = a.fixedRetry;
+    }
+    return a;
+  }
+
+  // Pick the one card to show for this turn (or null). Does not record it; call log() when shown.
+  function card(convo, a, level) {
+    var thr = LEVELS[level] || LEVELS.normal, st = state(convo), turn = convo.userTurns.length;
+    var m = (a.mistakes || []).filter(function (x) { return x.severity >= thr; })[0];
+    if (m) return m;
+    if (thr > 2) return null;   // Light/Off: no praise
+    if (a.redo && a.fixedRetry) return { type: "praise", id: "fixed", severity: 0, message: "Much better! That's exactly it." };
+    if (turn - st.lastPraise >= 4 && turn >= 2 && !(a.mistakes || []).some(function (x) { return x.severity >= 2; })) {
+      var pm = praiseFor(convo, a);
+      if (pm) return { type: "praise", id: "praise", severity: 0, message: pm };
+    }
+    return null;
+  }
+
+  function log(convo, c) {
+    if (!c) return;
+    var st = state(convo), turn = convo.userTurns.length;
+    if (c.type === "praise") { st.praise++; st.lastPraise = turn; return; }
+    var e = { turn: turn, id: c.id, label: c.label || LABELS[c.id] || "coach note", severity: c.severity, source: c.source || "rules", retried: false, fixed: false };
+    st.log.push(e); c.entry = e;
+  }
+
+  // Try again: remove the last user turn (and the partner's reaction), keep the record.
+  function undo(convo, c) {
+    var snap = convo._snap; if (!snap) return false;
+    Object.keys(snap).forEach(function (k) { convo[k] = snap[k]; });
+    convo._snap = null;
+    var st = state(convo); st.retries++;
+    var e = c && c.entry;
+    if (e) { e.retried = true; st.pending = { id: e.id, entry: e }; } else st.pending = null;
+    convo.coachHint = "";
+    return true;
+  }
+
+  function summary(convo) {
+    var st = state(convo), counts = {};
+    st.log.forEach(function (e) { counts[e.id] = (counts[e.id] || 0) + 1; });
+    var top = Object.keys(counts).sort(function (x, y) { return counts[y] - counts[x] || PRIORITY.indexOf(x) - PRIORITY.indexOf(y); })[0];
+    return { callouts: st.log.length, retried: st.log.filter(function (e) { return e.retried; }).length,
+             fixed: st.log.filter(function (e) { return e.fixed; }).length, praise: st.praise,
+             top: top ? { id: top, label: LABELS[top] || top, count: counts[top] } : null };
+  }
+
+  // ---------------- Gemini ----------------
+  function sevOf(v) {
+    if (typeof v === "number") return Math.max(1, Math.min(3, Math.round(v)));
+    var s = String(v || "").toLowerCase();
+    return /high|severe|crucial|3/.test(s) ? 3 : /low|minor|1/.test(s) ? 1 : 2;
+  }
+  // Normalise the model's coach object. Returns {ok:true, card|null} or null if there was no usable object.
+  function fromGemini(obj) {
+    if (!obj || typeof obj !== "object") return null;
+    if (!obj.mistake) return { ok: true, card: null };
+    var msg = norm(obj.message).slice(0, 200), sug = norm(obj.suggestion).slice(0, 200);
+    if (!msg) return { ok: true, card: null };
+    if (sug && !/^[“"]/.test(sug)) sug = q(sug.replace(/^["“]|["”]$/g, ""));
+    return { ok: true, card: { type: "mistake", id: "ai", severity: sevOf(obj.severity), label: LABELS.ai, message: msg, suggestion: sug, source: "gemini" } };
+  }
+  // Rule-based severe mistakes always win; otherwise the model's judgement is used when it gave one.
+  function merge(ruleCard, gem, level) {
+    var thr = LEVELS[level] || LEVELS.normal;
+    if (thr > 3) return null;
+    if (ruleCard && ruleCard.type === "mistake" && ruleCard.severity >= 3) return ruleCard;
+    if (gem && gem.ok) {
+      if (gem.card && gem.card.severity >= thr) return gem.card;
+      return ruleCard && ruleCard.type === "praise" ? ruleCard : null;
+    }
+    return ruleCard || null;
+  }
+
+  // ---------------- the partner reacts (a bit cooler) ----------------
+  var COOL = {
+    ignored: ["Ha, you totally dodged my question.", "Okay, smooth change of subject. I noticed, haha.", "Wait, you didn't answer my question!"],
+    interrogate: ["Whoa, that's a lot of questions at once, haha.", "Is this an interview? Kidding. One at a time!", "Okay, slow down, haha. Let me answer one."],
+    monologue: ["Wow, okay. That was a lot, haha.", "Ha, I almost lost you there for a second.", "Okay, that's quite the story."],
+    selfdep: ["Hey, don't say that about yourself.", "Stop it, you're not boring.", "Says who? You're doing fine."],
+    sorry: ["You don't have to apologise, haha.", "No need to say sorry!"],
+    idk: ["Ha, you're a hard one to read.", "Come on, just pick something!"],
+    negative: ["Hm, sounds like a lot is annoying you lately.", "Oof. Okay, let's find something nicer to talk about.", "That's a bit of a downer, haha."],
+    heavy: ["Ha, that's a big topic already.", "Wow, straight into the deep end, haha.", "Hm, maybe let's save that one for later."],
+    crude: ["Whoa, okay. Let's not go there.", "Um. That's a bit much.", "Okay... that was a bit forward."],
+    pushy: ["Ha, slow down a bit.", "Let's just enjoy the evening first, okay?"],
+    slur: ["Wow. Okay, I really don't like that word.", "Hm. Not a word I like hearing."],
+    swear: ["Ha, okay, language!", "Wow, colourful, haha."],
+    badmouth: ["I see. That sounds frustrating.", "Okay, I hear you. Let's focus on what you did, though."],
+    idkCore: ["Take your time, there's no rush.", "That's okay, take a moment."]
+  };
+  function pickCool(convo, arr) {
+    var free = arr.filter(function (l) { return !convo.said[l]; });
+    var l = (free.length ? free : arr)[Math.floor(convo.rng() * (free.length || arr.length))];
+    convo.said[l] = true; return l;
+  }
+  function reflect(convo, a, reply) {
+    var m = a && a.mistake; if (!m || !COOL[m.id]) return reply;
+    var cool = pickCool(convo, COOL[m.id]), ss = sentences(reply);
+    if (convo.persona.kind === "interview") return cool + " " + reply;
+    var tail = ss.length && /\?$/.test(ss[ss.length - 1]) ? ss[ss.length - 1] : ss.slice(0, 2).join(" ");
+    if (m.id === "interrogate" || m.id === "ignored") tail = ss.slice(0, 2).join(" ");
+    if (m.id === "crude" || m.id === "slur" || m.id === "pushy") tail = ss.length && /\?$/.test(ss[ss.length - 1]) ? ss[ss.length - 1] : "";
+    return (cool + " " + tail).trim();
+  }
+
+  var api = { detect: detect, observe: observe, card: card, log: log, undo: undo, summary: summary, fromGemini: fromGemini, merge: merge,
+              reflect: reflect, LEVELS: LEVELS, LABELS: LABELS, COOL: COOL };
+  root.CharismaCoach = api;
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+})(typeof window !== "undefined" ? window : globalThis);
+
+</script>
 <script id="speech">
 (function (root) {
   "use strict";
@@ -1915,7 +2327,7 @@
 (function () {
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
-  var Chat = window.CharismaChat;
+  var Chat = window.CharismaChat, Coach = window.CharismaCoach;
 
   var PROMPTS = {
     party: [
@@ -1966,7 +2378,8 @@
   var HKEY = "charismaPractice.history.v1", LKEY = "charismaPractice.lang", MKEY = "charismaPractice.mode",
       MUTEKEY = "charismaPractice.mute", GKEY = "charismaPractice.geminiKey", GMKEY = "charismaPractice.geminiModel",
       HFKEY = "charismaPractice.handsFree", TMKEY = "charismaPractice.talkMode",
-      SILKEY = "charismaPractice.silence", SORKEY = "charismaPractice.sendOnRelease";
+      SILKEY = "charismaPractice.silence", SORKEY = "charismaPractice.sendOnRelease",
+      CLKEY = "charismaPractice.coachLevel", CVKEY = "charismaPractice.coachVoice";
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
 
@@ -2108,6 +2521,8 @@
   var talkMode = lsGet(TMKEY) || (isMobile ? "hold" : "tap");
   var silenceKey = lsGet(SILKEY) || "normal";
   var sendOnRelease = lsGet(SORKEY) === "1";
+  var coachLevel = Coach.LEVELS[lsGet(CLKEY)] ? lsGet(CLKEY) : "normal";
+  var coachVoice = lsGet(CVKEY) === "1";
   function silenceMs() { return CharismaSpeech.SILENCE[silenceKey] || 0; }
   function needsReview() { return talkMode === "hold" ? !sendOnRelease : silenceMs() === 0; }
 
@@ -2159,6 +2574,12 @@
   function updateMood() {
     if (!convo) return;
     var p = convo.persona, el = $("mood"), last = convo.userTurns[convo.userTurns.length - 1];
+    var mm = last && last.mistake;
+    if (mm && mm.severity >= 2) {
+      var unc = /^(?:crude|pushy|slur|heavy|swear)$/.test(mm.id);
+      el.textContent = p.kind === "interview" ? "🤨 " + p.name + " looks unconvinced" : unc ? "😬 " + p.name + " looks a bit uncomfortable" : "😐 " + p.name + " seems a bit less into it";
+      el.className = "mood meh"; return;
+    }
     var meh = p.kind !== "interview" && (convo.noAskStreak >= 2 || (last && last.flat));
     el.textContent = meh ? "😐 " + p.name + " seems a bit less into it" : (p.kind === "interview" ? "🙂 " + p.name + " is listening" : "😊 " + p.name + " is enjoying this");
     el.className = "mood" + (meh ? " meh" : "");
@@ -2225,7 +2646,8 @@
     return want[0] || pool[0];
   }
   // Calls done() only when the voice has really finished (+300 ms), so the mic doesn't hear it
-  function speak(text, done) {
+  function speak(text, done, opts) {
+    var coachV = !!(opts && opts.coach);
     clearTimeout(ttsTimer);
     var finished = false, polls = 0;
     var fin = function () {
@@ -2236,13 +2658,14 @@
       };
       wait();
     };
-    if (muted || !window.speechSynthesis || typeof SpeechSynthesisUtterance === "undefined") { ttsTimer = setTimeout(function () { done && done(); }, 50); return; }
+    if ((muted && !coachV) || !window.speechSynthesis || typeof SpeechSynthesisUtterance === "undefined") { ttsTimer = setTimeout(function () { done && done(); }, 50); return; }
     try {
       speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(text);
       u.lang = $("lang").value;
-      var v = pickVoice(convo ? convo.persona.voice : "female"); if (v) u.voice = v;
-      u.rate = 1.02; u.pitch = convo && convo.persona.voice === "male" ? 0.95 : 1.05;
+      var pv = convo ? convo.persona.voice : "female";
+      var v = pickVoice(coachV ? (pv === "female" ? "male" : "female") : pv); if (v) u.voice = v;   // coach: a different voice
+      u.rate = coachV ? 1.1 : 1.02; u.pitch = coachV ? (pv === "female" ? 0.8 : 1.3) : (pv === "male" ? 0.95 : 1.05);
       u.onend = fin; u.onerror = fin;
       speechSynthesis.speak(u);
       ttsTimer = setTimeout(fin, 2500 + text.split(/\s+/).length * 420); // fallback if onend never fires
@@ -2256,13 +2679,14 @@
 
   function partnerSays(text) {
     Chat.addPartner(convo, text);
-    addBubble("them", text);
+    var bubble = addBubble("them", text);
     setPhase("partner", muted ? "" : convo.persona.name + " is talking…");
     speak(text, function () {
       if (!convo || phase !== "partner") return;
       setPhase("idle", yourTurnMsg());
       if (talkMode === "tap" && handsFree && SR && !convo.ended) startListening();
     });
+    return bubble;
   }
 
   function startChat() {
@@ -2271,7 +2695,7 @@
     $("chatLog").innerHTML = ""; $("convSummary").hidden = true; $("chatCard").hidden = false;
     $("pickCard").hidden = true;
     $("chatTitle").textContent = convo.persona.emoji + " " + convo.persona.title + " with " + convo.persona.name;
-    $("cInput").value = ""; renderChips([]); updateMood(); hideGNotice();
+    $("cInput").value = ""; renderChips([]); updateMood(); hideGNotice(); curTurn = null;
     $("cTimer").textContent = "0:00";
     partnerSays(Chat.opener(convo));
     $("chatCard").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2366,32 +2790,100 @@
     finishListening();
   }
 
+  // ---- In-chat coach cards ----
+  var turnSeq = 0, curTurn = null;
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function closeCards() {
+    document.querySelectorAll("#chatLog .coachc .cbtns").forEach(function (b) { b.parentNode.classList.add("done"); b.remove(); });
+  }
+  function renderCoachCard(card, t) {
+    var el = document.createElement("div");
+    el.className = "msg coachc " + (card.type === "praise" ? "praise" : "sev" + card.severity);
+    el.setAttribute("role", "note");
+    var h = document.createElement("div"); h.className = "who"; h.textContent = card.type === "praise" ? "Coach · nice" : "Coach"; el.appendChild(h);
+    var m = document.createElement("div"); m.className = "cmsg"; m.textContent = card.message; el.appendChild(m);
+    if (card.suggestion) {
+      var sg = document.createElement("div"); sg.className = "csug";
+      var lb = document.createElement("span"); lb.textContent = /^[“"]/.test(card.suggestion) ? "Try saying something like:" : "Tip:";
+      sg.appendChild(lb); sg.appendChild(document.createTextNode(" " + card.suggestion)); el.appendChild(sg);
+    }
+    if (card.type === "mistake") {
+      var bs = document.createElement("div"); bs.className = "cbtns";
+      var tr = document.createElement("button"); tr.type = "button"; tr.className = "cbtn try"; tr.textContent = "↺ Try again";
+      var kg = document.createElement("button"); kg.type = "button"; kg.className = "cbtn keep"; kg.textContent = "Keep going";
+      tr.addEventListener("click", function () { tryAgain(t); });
+      kg.addEventListener("click", function () { bs.remove(); el.classList.add("done"); });
+      bs.appendChild(tr); bs.appendChild(kg); el.appendChild(bs);
+    }
+    var log = $("chatLog");
+    if (t.typing && t.typing.parentNode) log.insertBefore(el, t.typing); else log.appendChild(el);
+    scrollChat();
+    return el;
+  }
+  function coachSay(card) {
+    return new Promise(function (res) {
+      if (!coachVoice || !card || !window.speechSynthesis) { res(); return; }
+      speak(card.message + (card.suggestion ? " Try saying something like: " + card.suggestion.replace(/[“”"]/g, "") : ""), res, { coach: true });
+    });
+  }
+  function tryAgain(t) {
+    if (!convo || convo.ended || t !== curTurn || t.undone) return;
+    t.undone = true; curTurn = null;
+    Listener.abort(); clearInterval(chatTick); stopMeter(); removeLive();
+    clearTimeout(ttsTimer); if (window.speechSynthesis) speechSynthesis.cancel();
+    [t.row, t.card, t.typing, t.reply].forEach(function (el) { if (el && el.parentNode) el.remove(); });
+    Coach.undo(convo, t.cardObj);
+    renderChips([]); updateMood(); scrollChat();
+    setPhase("idle", "Okay, have another go at that answer. Say it your way, the example is just an idea.");
+    if (talkMode === "tap" && handsFree && SR) startListening();
+  }
+
   function submitUser(text, seconds, typed) {
     if (!convo || convo.ended) return;
     if (Listener.abort()) clearInterval(chatTick);
     stopMeter(); removeLive(); $("reviewBox").hidden = true;
-    var row = addBubble("me", text);
-    var a = Chat.observeUser(convo, text, { seconds: typed ? null : seconds, typed: typed });
+    closeCards();
+    var t = { id: ++turnSeq }; curTurn = t;
+    var row = addBubble("me", text); t.row = row;
+    convo.coachLevel = coachLevel;
+    var a = Coach.observe(convo, text, { seconds: typed ? null : seconds, typed: typed });
     var vl = document.createElement("div"); vl.className = "vline " + a.verdict.tone; vl.textContent = a.verdict.text;
     row.appendChild(vl);
     var mk = row.querySelector(".txt"); mk.innerHTML = highlight(a.text, a.result.marks);
     renderChips(Chat.liveCoach(text, seconds || 0, Object.assign(coachCtx(typed), { prevPartner: convo.messages.length > 1 ? convo.messages[convo.messages.length - 2].text : "" })));
-    updateMood();
     setPhase("thinking", convo.persona.name + " is thinking…");
-    var typing = addBubble("them", "", "typing"); typing.querySelector(".txt").innerHTML = "<span></span><span></span><span></span>";
-    var key = lsGet(GKEY);
+    var key = lsGet(GKEY), level = coachLevel;
+    var ruleCard = Coach.card(convo, a, level), shown = false;
+    var show = function (card) {
+      if (!card || shown || t.undone) return Promise.resolve();
+      shown = true; Coach.log(convo, card); t.cardObj = card; t.cardAt = Date.now();
+      t.card = renderCoachCard(card, t); updateMood();
+      return coachSay(card);
+    };
+    // without a key the rule card shows right away; with a key, only severe ones (the model's judgement comes with the reply)
+    var early = ruleCard && (!key || (ruleCard.type === "mistake" && ruleCard.severity >= 3));
+    t.typing = addBubble("them", "", "typing"); t.typing.querySelector(".txt").innerHTML = "<span></span><span></span><span></span>";
+    var coachP = early ? wait(350).then(function () { return show(ruleCard); }) : Promise.resolve();
+    updateMood();
     var started = Date.now();
     Chat.partnerReply(convo, a, { apiKey: key, model: lsGet(GMKEY) || Chat.GEMINI_MODELS[0], fetch: key ? window.fetch.bind(window) : null })
       .then(function (res) {
-        var wait = Math.max(0, (res.source === "rules" ? 600 + Math.min(900, res.text.length * 6) : 0) - (Date.now() - started));
-        setTimeout(function () {
-          typing.remove();
-          if (!convo || convo.ended) return;
-          if (res.error) showGNotice("Smart replies didn't work (" + res.error + "). Using the free built-in replies for now.");
-          else if (res.source === "gemini") hideGNotice();
-          if (res.coach) { var c = document.createElement("div"); c.className = "vline tip2"; c.textContent = "💡 " + res.coach; row.appendChild(c); }
-          partnerSays(res.text);
-        }, wait);
+        if (t.undone) return;
+        return coachP.then(function () {
+          if (!shown) return show(key ? Coach.merge(ruleCard, Coach.fromGemini(res.coachObj), level) : ruleCard);
+        }).then(function () {
+          var base = (res.source === "rules" ? 600 + Math.min(900, res.text.length * 6) : 0) - (Date.now() - started);
+          var afterCard = t.cardAt ? 1300 - (Date.now() - t.cardAt) : 0;   // let him read the card first
+          setTimeout(function () {
+            if (t.undone) return;
+            t.typing.remove();
+            if (!convo || convo.ended) return;
+            if (res.error) showGNotice("Smart replies didn't work (" + res.error + "). Using the free built-in replies for now.");
+            else if (res.source === "gemini") hideGNotice();
+            if (res.coach) { var c = document.createElement("div"); c.className = "vline tip2"; c.textContent = "💡 " + res.coach; row.appendChild(c); }
+            t.reply = partnerSays(res.text);
+          }, Math.max(0, base, afterCard));
+        });
       });
   }
 
@@ -2417,6 +2909,10 @@
       " asked · you talked " + s.stats.talkShare + "% of the time") : "No answers yet";
     var fill = function (id, arr) { var ul = $(id); ul.innerHTML = ""; arr.forEach(function (t) { var li = document.createElement("li"); li.textContent = t; ul.appendChild(li); }); };
     fill("cBest", s.best); fill("cWork", s.work);
+    var cs = Coach.summary(convo);
+    $("cCoach").textContent = !cs.callouts ? (coachLevel === "off" ? "Coach was off." : "Coach: no call-outs this time. Nice!") :
+      "Coach: " + cs.callouts + " call-out" + (cs.callouts === 1 ? "" : "s") + " · fixed " + cs.fixed + " with Try again" +
+      (cs.retried > cs.fixed ? " (" + cs.retried + " tried)" : "") + (cs.top.count > 1 ? " · most common: " + cs.top.label + " (" + cs.top.count + "×)" : " · biggest: " + cs.top.label);
     $("convSummary").hidden = false;
     if (s.turns >= 1) {
       var h = loadHist();
@@ -2560,6 +3056,9 @@
   $("talkMode").addEventListener("change", function () { if (phase === "listening") { Listener.abort(); stopListeningUI(); } talkMode = $("talkMode").value; lsSet(TMKEY, talkMode); renderMicSettings(); if (phase === "idle") $("cStatus").textContent = yourTurnMsg(); });
   $("silence").addEventListener("change", function () { silenceKey = $("silence").value; lsSet(SILKEY, silenceKey); });
   $("hfBox").addEventListener("change", function () { handsFree = $("hfBox").checked; lsSet(HFKEY, handsFree ? "1" : "0"); });
+  $("coachLevel").value = coachLevel; $("coachVoice").checked = coachVoice;
+  $("coachLevel").addEventListener("change", function () { coachLevel = $("coachLevel").value; lsSet(CLKEY, coachLevel); });
+  $("coachVoice").addEventListener("change", function () { coachVoice = $("coachVoice").checked; lsSet(CVKEY, coachVoice ? "1" : "0"); });
   $("sorBox").addEventListener("change", function () { sendOnRelease = $("sorBox").checked; lsSet(SORKEY, sendOnRelease ? "1" : "0"); });
   // Settings
   var gm = $("gModel");
@@ -2592,7 +3091,7 @@
   // for automated tests
   window.__cp = { showResult: showResult, setCat: setCat, Q: Q };
   window.__chat = { get convo() { return convo; }, get phase() { return phase; }, startChat: startChat, endChat: endChat, Listener: Listener,
-    get talkMode() { return talkMode; }, get silenceMs() { return silenceMs(); } };
+    get talkMode() { return talkMode; }, get silenceMs() { return silenceMs(); }, get coachLevel() { return coachLevel; }, Coach: Coach };
 })();
 </script>
 </body>
