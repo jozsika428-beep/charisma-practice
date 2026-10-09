@@ -136,6 +136,22 @@
   .chatbar .mid{flex:1;min-width:0}
   .chatbar .timer{font-size:1.1rem}
   .chatbar .status{text-align:left;font-size:.85rem}
+  .cmic{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.1}
+  .cmic .ic{font-size:1.3rem}
+  .cmic.hold{width:112px;height:112px;font-size:.95rem;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .cmic.hold .ic{font-size:1.8rem}
+  .cmic.pressed{transform:scale(.96)}
+  .listen{display:flex;align-items:flex-end;gap:3px;height:22px;margin:4px 0;--lvl:0}
+  .listen i{display:block;width:5px;border-radius:3px;background:var(--bad);height:calc(5px + 17px * var(--lvl));transition:height .1s}
+  .listen i:nth-child(2),.listen i:nth-child(4){height:calc(5px + 12px * var(--lvl))}
+  .listen i:nth-child(1),.listen i:nth-child(5){height:calc(4px + 7px * var(--lvl))}
+  .listen span{margin-left:6px;font-size:.78rem;color:var(--muted);align-self:center}
+  .linkbtn{background:none;border:0;padding:4px 0;color:var(--accent);font:inherit;font-size:.85rem;text-decoration:underline;cursor:pointer}
+  .review{margin-top:10px;background:var(--card2);border-radius:12px;padding:10px}
+  .review label{font-size:.8rem;color:var(--muted)}
+  .review textarea{width:100%;box-sizing:border-box;margin-top:6px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;resize:vertical}
+  .review .row2{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+  .opts select{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:4px 6px;font:inherit;font-size:.82rem}
   .cform{display:flex;gap:8px;margin-top:10px}
   .cform input{flex:1;min-width:0;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:11px 12px;font:inherit}
   .opts{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:10px;font-size:.82rem;color:var(--muted)}
@@ -266,20 +282,29 @@
         <div class="chips" id="coachChips"></div>
       </div>
       <div class="chatbar">
-        <button class="cmic" id="cMic">🎤 Talk</button>
+        <button class="cmic" id="cMic" type="button" aria-label="Talk"><span class="ic">🎤</span><span class="lb">Talk</span></button>
         <div class="mid">
           <div class="timer" id="cTimer">0:00</div>
+          <div class="listen" id="listenInd" hidden aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><span>Listening</span></div>
           <div class="status" id="cStatus"></div>
+          <button class="linkbtn" id="sayAgain" type="button" hidden>Didn't catch that? Say it again</button>
         </div>
-        <button class="btn-ghost" id="cDone" disabled>Done ✓</button>
+        <button class="btn-ghost" id="cDone" type="button" disabled>Done ✓</button>
+      </div>
+      <div class="review" id="reviewBox" hidden>
+        <label for="reviewText">What I heard (you can fix it):</label>
+        <textarea id="reviewText" rows="3"></textarea>
+        <div class="row2"><button class="btn-ghost" id="reviewAgain" type="button">Say it again</button><button class="btn-primary" id="reviewSend" type="button">Send</button></div>
       </div>
       <form class="cform" id="cForm" autocomplete="off">
         <input id="cInput" type="text" placeholder="…or type your answer" enterkeyhint="send" aria-label="Type your answer">
         <button class="btn-primary" id="cSend" type="submit">Send</button>
       </form>
-      <div class="opts" id="hfRow">
-        <label><input type="checkbox" id="hfBox"> Listen automatically after they talk</label>
-        <label><input type="checkbox" id="asBox"> Send after a short pause</label>
+      <div class="opts" id="micSet">
+        <label>Talk style <select id="talkMode"><option value="hold">Hold to talk</option><option value="tap">Tap to talk</option></select></label>
+        <label id="silRow">Send after quiet <select id="silence"><option value="short">Short (2 s)</option><option value="normal">Normal (3.5 s)</option><option value="long">Long (5 s)</option><option value="off">Off (I tap Done)</option></select></label>
+        <label id="hfLabel"><input type="checkbox" id="hfBox"> Listen automatically after they talk</label>
+        <label id="sorLabel"><input type="checkbox" id="sorBox"> Send as soon as I let go</label>
       </div>
     </section>
 
@@ -616,6 +641,7 @@
 
 <!-- ===================== Conversation engine (pure, testable) ===================== -->
 <script id="engine">
+
 (function (root) {
   "use strict";
   var S = root.CharismaScore;
@@ -626,84 +652,184 @@
       id: "date", kind: "social", category: "date", name: "Sophie", emoji: "☕", title: "First date", voice: "female",
       bio: "29, graphic designer in Utrecht. Loves bouldering, cooking Thai food and old vinyl records. Has a cat called Pixel.",
       scene: "a first date at a cosy café in Utrecht",
+      style: "lively, warm and playful, lightly flirty but always respectful. Casual, with contractions, small opinions and a bit of friendly teasing",
       opener: ["Hi! It's so nice to finally meet you in person. So... how's your day been so far?",
-               "Hey, you made it! Nice to finally meet you. How has your day been?"],
-      agenda: ["hobbies", "work", "travel", "food", "weekend", "music", "goals", "family", "movies", "pets"],
+               "Hey, you made it! Nice to finally meet you. How has your day been?",
+               "Hi! Okay, you look exactly like your photos, that's a good start. How's your day going?",
+               "Hey! Sorry, I already ordered, I was starving. How's your day been?"],
+      agenda: ["hobbies", "work", "travel", "food", "weekend", "music", "goals", "family", "movies", "pets", "city"],
       answers: {
-        name: ["I'm Sophie! Soph for my friends."],
-        age: ["I'm 29. Thirty next spring, which is a bit scary!"],
+        name: ["I'm Sophie! Soph for my friends. You can earn that, haha."],
+        age: ["I'm 29. Thirty next spring, which is a bit scary!", "Twenty-nine. Old enough to have a favourite tea, young enough to still stay out late."],
         day: ["Pretty good actually! I had a long design meeting this morning, so I treated myself to a cinnamon bun after.",
-              "Busy but nice. I finally finished a poster design I've been stuck on all week."],
+              "Busy but nice. I finally finished a poster design I've been stuck on all week.",
+              "Honestly? Chaotic. My printer jammed three times and Pixel knocked my coffee over. But it's getting better now."],
         work: ["I'm a graphic designer at a small studio in Utrecht. Mostly posters and logos for cafés and festivals.",
-               "I design logos and posters. My favourite project was a poster for a little jazz festival last summer."],
-        study: ["I studied graphic design at the art academy in Groningen. Four years of coffee and deadlines!"],
+               "I design logos and posters. My favourite project was a poster for a little jazz festival last summer.",
+               "Design stuff. Last month a client asked me to make their logo 'more purple but less purple'. I'm still recovering.",
+               "I love it most days. There's nothing like seeing your poster on a wall in the city and pretending you don't care."],
+        study: ["I studied graphic design at the art academy in Groningen. Four years of coffee and deadlines!",
+                "Art academy in Groningen. I once stayed up two nights in a row to finish a book cover. Never again."],
         hobbies: ["I go bouldering about twice a week, and I collect old vinyl records. I found a 1970s soul record for two euros last month!",
-                  "Climbing, cooking and digging through record shops. Pretty nerdy, I know."],
-        sport: ["Bouldering! I go twice a week with a friend. I'm still terrible at overhangs, but I love it."],
+                  "Climbing, cooking and digging through record shops. Pretty nerdy, I know.",
+                  "I've started pottery too. My first bowl looked like a sad ashtray, but I use it every day.",
+                  "Record shops are my weakness. I go in for five minutes and come out an hour later with three albums I don't need."],
+        sport: ["Bouldering! I go twice a week with a friend. I'm still terrible at overhangs, but I love it.",
+                "I climb. I'm not good, but I'm very enthusiastic, which I think counts for something.",
+                "I tried running once. Once. Climbing is more my thing, there's a puzzle in every wall."],
         travel: ["Last year I backpacked through Vietnam for three weeks. The food in Hoi An was unreal. Next on my list is Japan.",
-                 "Vietnam was my favourite trip so far, and I really want to see Japan in autumn."],
+                 "Vietnam was my favourite trip so far, and I really want to see Japan in autumn.",
+                 "In Vietnam I got a dress made in one day and then got completely lost on a scooter. Best trip ever.",
+                 "Japan is my dream. Temples, tiny cafés, the food... I've had a list for years."],
         food: ["I'm a bit obsessed with Thai food. I make a pretty good green curry, if I say so myself!",
-               "Anything spicy. And I can never say no to a good cinnamon bun."],
+               "Anything spicy. And I can never say no to a good cinnamon bun.",
+               "I'm the friend who orders for the whole table. I take food very seriously.",
+               "I once tried to make pad thai for my parents and set off the smoke alarm. It was still good though."],
         music: ["Mostly indie and old soul records. Sunday mornings are for vinyl and coffee.",
-                "Lots of indie. I go to small concerts at TivoliVredenburg whenever I can."],
+                "Lots of indie. I go to small concerts at TivoliVredenburg whenever I can.",
+                "My guilty pleasure is 2000s pop. I know every word, it's embarrassing."],
         movies: ["I love Studio Ghibli films. And I just finished a Danish crime series. So dark, but so good.",
-                 "Anything by Studio Ghibli. Spirited Away is my comfort movie."],
-        family: ["I have an older brother who lives in Berlin, and my parents still live in Groningen. We're pretty close."],
-        pets: ["I have a cat called Pixel. She's grey, very dramatic, and she sleeps on my keyboard."],
+                 "Anything by Studio Ghibli. Spirited Away is my comfort movie.",
+                 "I cry at every animated film. Every single one. Even the funny ones."],
+        family: ["I have an older brother who lives in Berlin, and my parents still live in Groningen. We're pretty close.",
+                 "My brother is the funny one in the family. I'm the one who organises the birthdays.",
+                 "My mum still sends me photos of every cat she sees. Every single cat."],
+        pets: ["I have a cat called Pixel. She's grey, very dramatic, and she sleeps on my keyboard.",
+               "Pixel, my cat, runs my life. She has opinions about everything, mostly about breakfast.",
+               "Pixel once deleted half a design by walking across my laptop. I kept it. It was better."],
         weekend: ["Saturday mornings I go to the market, then usually climbing. Sundays are lazy.",
-                  "Usually the market, a bit of climbing and cooking something new. Very wild life, haha."],
+                  "Usually the market, a bit of climbing and cooking something new. Very wild life, haha.",
+                  "This weekend I'm helping my friend paint her flat. I've been promised pizza, so I'm in."],
         city: ["I live in Utrecht now, but I grew up in Groningen. I moved here five years ago for work.",
-               "Groningen originally! Utrecht has been home for five years now."],
+               "Groningen originally! Utrecht has been home for five years now.",
+               "I love Utrecht. It's big enough to be fun and small enough that you always run into someone."],
         goals: ["One day I want to start my own little design studio. Maybe with a shop that sells prints and records.",
-                "I'd love to have my own studio. And climb outdoors in France, that's on my bucket list."],
+                "I'd love to have my own studio. And climb outdoors in France, that's on my bucket list.",
+                "Learn Japanese before I go to Japan. I'm on day twelve of the app. Don't test me."],
         host: ["We matched on the app, remember? Haha."],
         general: ["Hmm, good question! I'd say I'm pretty curious. I love trying new things.",
-                  "Ooh, I have to think about that one. I'm quite easy-going, honestly."]
-      }
+                  "Ooh, I have to think about that one. I'm quite easy-going, honestly.",
+                  "Ha, tough one. Let's say I'm a work in progress."]
+      },
+      opinions: {
+        work: ["Honestly, I think everyone should have a job where they make something with their hands.", "I think a good boss matters more than a good salary. Fight me."],
+        food: ["Cooking for someone is the most underrated date move, just saying.", "Pineapple on pizza is fine, by the way. I'll die on that hill."],
+        travel: ["I think the best trips are the ones where something goes a little bit wrong.", "Travelling slow is the best. One city, a whole week, no plans."],
+        sport: ["I think any sport is fun if you do it with the right people.", "Gyms scare me a little. All those mirrors."],
+        music: ["Music on vinyl just sounds warmer. Okay, maybe that's in my head, but still."],
+        movies: ["A film should be under two hours. I said what I said."],
+        hobbies: ["Everyone needs one hobby they're bad at, just for fun."],
+        weekend: ["A perfect Sunday has no alarm and at least one long breakfast."],
+        city: ["Utrecht has the best canals. Sorry, Amsterdam."],
+        pets: ["Cats are just tiny roommates who don't pay rent."],
+        family: ["I think you learn a lot about someone from how they talk about their family."],
+        goals: ["I think it's never too late to start something new."]
+      },
+      tangents: ["Sorry, random, but this café plays the best music. Is that Fleetwood Mac?",
+                 "Okay, this cinnamon bun is a crime. Do you want half?",
+                 "Can I say something? I was a bit nervous before this. I'm not anymore.",
+                 "Random thought, but the waiter has the best moustache I've ever seen.",
+                 "Oh, it's starting to rain. Good thing we're inside, I didn't bring a coat. Classic me."],
+      lowShare: ["Yeah. My week's been a lot, actually.", "Mm. I had kind of a funny day today, actually.",
+                 "Nice. I've been thinking about booking a trip, actually.", "Cool. I just started a new project at work, actually.",
+                 "Right. I'm a bit tired, I was up late with a design."],
+      teases: ["Okay, you're smoother than I expected.", "Ha, careful, I'm starting to like you.", 
+               "Noted. You just earned a point, by the way.", "Okay, that's actually kind of cute.", "Smooth. Very smooth."]
     },
     party: {
       id: "party", kind: "social", category: "party", name: "Max", emoji: "🎉", title: "Party small talk", voice: "male",
       bio: "34, sound engineer at a theatre in Amsterdam. Cycles everywhere, brews his own beer, has a dog called Bram. Knows the host, Lisa, from university.",
       scene: "a friend's birthday party at Lisa's flat in Amsterdam",
+      style: "relaxed, friendly and funny, like chatting in a kitchen at a party. Casual, with contractions, small jokes and opinions",
       opener: ["Hey! I don't think we've met yet. I'm Max. How do you know Lisa?",
-               "Hi! I'm Max, nice to meet you. So how do you know Lisa?"],
-      agenda: ["work", "city", "weekend", "travel", "music", "sport", "food", "hobbies", "goals", "pets"],
+               "Hi! I'm Max, nice to meet you. So how do you know Lisa?",
+               "Hey, I'm Max. I've been guarding these crisps for twenty minutes. How do you know Lisa?",
+               "Hi there! Max. I only know Lisa and the dog here, so you're my new friend. How do you know her?"],
+      agenda: ["work", "city", "weekend", "travel", "music", "sport", "food", "hobbies", "goals", "pets", "movies"],
       answers: {
         name: ["I'm Max! Like the Max Verstappen, but slower. Much slower."],
-        age: ["Thirty-four. Old enough to leave parties before midnight, haha."],
-        day: ["Good! I slept in, then fixed my bike, so I'm feeling productive."],
+        age: ["Thirty-four. Old enough to leave parties before midnight, haha.", "Thirty-four. My knees say fifty."],
+        day: ["Good! I slept in, then fixed my bike, so I'm feeling productive.",
+              "Long. We had a matinee at the theatre and the smoke machine went crazy. Very dramatic.",
+              "Pretty chill. Walked Bram, made pancakes, and now I'm here. Perfect day."],
         work: ["I'm a sound engineer at a theatre in Amsterdam. I make sure the actors can be heard and nothing squeaks.",
-               "I do the sound at a theatre. Last week a microphone died in the middle of a musical. Very stressful!"],
-        study: ["I studied music technology in Hilversum. Lots of cables and very little sleep."],
+               "I do the sound at a theatre. Last week a microphone died in the middle of a musical. Very stressful!",
+               "I'm a sound engineer. Basically, if you can hear the actors, I did my job. If you can't, it's my fault.",
+               "I do sound at a theatre. Best part: I've seen the same musical eighty times and I still cry at the ending."],
+        study: ["I studied music technology in Hilversum. Lots of cables and very little sleep.",
+                "Music technology in Hilversum. That's where I met Lisa, actually. She was the only one who could fix the coffee machine."],
         hobbies: ["I brew my own beer at home. My last batch was a honey beer, and it was actually drinkable!",
-                  "Board games and home brewing. I'm a real nerd, I know."],
+                  "Board games and home brewing. I'm a real nerd, I know.",
+                  "My first home-brewed beer exploded in the cupboard. My flat smelled like a pub for a week.",
+                  "We have a board game night every Thursday. It gets very competitive. Friendships have been tested."],
         sport: ["I cycle everywhere, and I play football with some friends every Sunday. We lose a lot.",
-                "I'm training for my first marathon next year. Right now I can do about fifteen kilometres."],
+                "I'm training for my first marathon next year. Right now I can do about fifteen kilometres.",
+                "Sunday football. We're the worst team in the league, but we have the best team dinners."],
         travel: ["Last summer I did a road trip through Portugal with two friends. Lisbon was amazing.",
-                 "I loved Portugal. The surf towns in the south were the best part."],
+                 "I loved Portugal. The surf towns in the south were the best part.",
+                 "In Portugal I tried surfing for the first time. I mostly drank the ocean, but it was great.",
+                 "Next year I want to cycle from Amsterdam to Copenhagen. Bram stays home, he's not a cyclist."],
         food: ["Indonesian food, no doubt. A good rendang makes me very happy.",
-               "I'm a big fan of Indonesian food. There's a great place in De Pijp."],
+               "I'm a big fan of Indonesian food. There's a great place in De Pijp.",
+               "I'm a terrible cook but a great eater. Very supportive at dinners.",
+               "My signature dish is pancakes. That's it. That's the list."],
         music: ["A strange mix of jazz and techno. Depends on the day!",
-                "Jazz on Sunday, techno on Saturday. I went to Dekmantel festival this summer."],
-        movies: ["I'm into sci-fi series. I just started watching one about a space station, it's great."],
-        family: ["I have two younger sisters. One of them is here somewhere, actually!"],
-        pets: ["I have a dog called Bram. He's a very lazy labrador who loves cheese."],
+                "Jazz on Sunday, techno on Saturday. I went to Dekmantel festival this summer.",
+                "Working in sound ruined music for me a bit. I hear every bad mix now."],
+        movies: ["I'm into sci-fi series. I just started watching one about a space station, it's great.",
+                 "I fall asleep in every movie. Every single one. Ask Lisa."],
+        family: ["I have two younger sisters. One of them is here somewhere, actually!",
+                 "My sisters still call me for every tech problem. Printer broken? Max."],
+        pets: ["I have a dog called Bram. He's a very lazy labrador who loves cheese.",
+               "Bram, my dog, is the real star. People at the park know his name, not mine.",
+               "Bram once stole a whole wheel of cheese at a picnic. We don't talk about it."],
         weekend: ["Football on Sunday, and probably a long walk with Bram. Nothing crazy.",
-                  "Sunday football with friends, and hopefully some sleep!"],
+                  "Sunday football with friends, and hopefully some sleep!",
+                  "I'm brewing a new batch this weekend. Some kind of coffee beer. Wish me luck."],
         city: ["I grew up in Rotterdam, but I've lived in Amsterdam for about ten years now.",
-               "Rotterdam originally. Don't tell anyone here, haha."],
+               "Rotterdam originally. Don't tell anyone here, haha.",
+               "Rotterdam boy, Amsterdam address. I still defend Rotterdam at every party."],
         goals: ["Run that marathon next year. And maybe open a tiny brewery one day.",
-                "My big goal is the Rotterdam marathon next spring."],
-        host: ["Lisa and I studied together in Hilversum. We've been friends for over ten years."],
+                "My big goal is the Rotterdam marathon next spring.",
+                "One day I want a little brewery with a bar. Bram would be the manager."],
+        host: ["Lisa and I studied together in Hilversum. We've been friends for over ten years.",
+               "Lisa? We go way back. University. She still owes me twenty euros, actually."],
         general: ["Ha, good question. I'm pretty relaxed, I just like good people and good food.",
-                  "Hmm, let me think... I'm the guy who always brings a board game, haha."]
-      }
+                  "Hmm, let me think... I'm the guy who always brings a board game, haha.",
+                  "Oh man, I don't know. Ask me again after another drink."]
+      },
+      opinions: {
+        work: ["Honestly, I think everyone should work one job in hospitality. It teaches you everything.", "Best jobs are the ones where you forget to check the time."],
+        food: ["Bitterballen are the best party food ever invented. No discussion.", "Every party needs more snacks than people think. Always."],
+        travel: ["Road trips are the best way to travel. Change my mind.", "I think you should always say yes to the weird local food."],
+        sport: ["Amateur football is ninety percent talking about football and ten percent playing.", "Cycling in the rain builds character. That's what I tell myself."],
+        music: ["Live music beats everything. Even a bad concert is better than a good playlist.", "Every party needs one person in charge of the music. Tonight it's clearly not me."],
+        hobbies: ["Everyone should have one weird hobby. It makes you more interesting at parties."],
+        city: ["Rotterdam has better architecture. Amsterdam has better cheese. Fair trade."],
+        pets: ["Dogs are just better people, honestly."],
+        weekend: ["A good weekend has one plan, not five."],
+        goals: ["I think big goals are only fun if you tell people. Then you have to do them."]
+      },
+      tangents: ["Sorry, random, but has anyone actually tried the punch? It's suspiciously blue.",
+                 "Oh, Lisa's put on the playlist from 2012. Bold move.",
+                 "Hang on, is that the guy who brought a guitar? Please don't let him play.",
+                 "Random, but these little cheese things are amazing. You have to try one.",
+                 "Okay, someone just knocked over a plant. Classic party moment."],
+      lowShare: ["Yeah. Lisa's parties are always a bit wild, actually.", "Mm. I had a weird thing happen at work this week, actually.",
+                 "Cool. I'm thinking of getting a second dog, actually.", "Right. I just got back from a trip, actually.",
+                 "Ah. I'm brewing something new at the moment, actually."],
+      teases: ["Okay, you're officially more interesting than everyone in the kitchen.", "Ha, you'd be good at these parties.",
+               "Careful, Lisa will make you give a speech later.", "Okay, I like you, you can stay by the snacks.",
+               "Ha, that's a great answer. I'm stealing it.", "Smooth. Do you practise these?"]
     },
     interview: {
       id: "interview", kind: "interview", category: "interview", name: "Ellen", emoji: "💼", title: "Job interview", voice: "female",
       bio: "Hiring manager at Northwind Logistics (a made-up company). Leads a team of eight. Friendly, but wants real examples.",
       scene: "a job interview for an Operations Coordinator role at Northwind Logistics, a made-up logistics company in Rotterdam",
-      opener: ["Hi, thanks for coming in today. I'm Ellen, I lead the operations team here at Northwind. Let's start easy: tell me a bit about yourself."],
+      style: "professional but warm and human. Encouraging, with a little humour, clear and to the point",
+      opener: ["Hi, thanks for coming in today. I'm Ellen, I lead the operations team here at Northwind. Let's start easy: tell me a bit about yourself.",
+               "Welcome! I'm Ellen, I run operations here at Northwind. Did you find us okay? Let's start simple: tell me a bit about yourself.",
+               "Hi, nice to meet you. I'm Ellen. Coffee's on the way. To start, could you tell me a bit about yourself?"],
       agenda: [
         { q: "Tell me a bit about yourself.", behavioral: false },
         { q: "What made you apply for this role?", behavioral: false },
@@ -716,22 +842,32 @@
       ],
       answers: {
         role: ["You'd plan daily deliveries, solve problems when trucks are late, and keep our customers updated. No two days are the same.",
-               "It's a mix of planning, problem-solving and lots of contact with drivers and customers."],
+               "It's a mix of planning, problem-solving and lots of contact with drivers and customers.",
+               "Honestly? Mornings are planning, afternoons are fixing whatever went wrong in the morning. It's never boring."],
         team: ["The team is eight people, a nice mix of ages. We have coffee together every morning at nine.",
-               "Eight people. Very friendly, and we help each other a lot when it gets busy."],
+               "Eight people. Very friendly, and we help each other a lot when it gets busy.",
+               "Great people. One of them brings stroopwafels every Friday, which is a big part of team morale."],
         company: ["Northwind moves goods for about two hundred shops in the Netherlands and Belgium. We've grown a lot in the last three years.",
-                  "We're a mid-size logistics company in Rotterdam, about one hundred and fifty people."],
-        remote: ["It's hybrid: three days in the office and two from home. The planning days are in the office."],
-        salary: ["We'll talk about salary in the next round, but it's in line with the market, plus a travel allowance."],
-        next: ["We're talking to a few more people this week. You'll hear from us within about a week, and the next step is a meeting with the team."],
+                  "We're a mid-size logistics company in Rotterdam, about one hundred and fifty people.",
+                  "We started as a family business with three trucks. Now we have sixty. Still a bit of that family feeling, though."],
+        remote: ["It's hybrid: three days in the office and two from home. The planning days are in the office.",
+                 "We work hybrid, so two days from home. Most people like to be in on Mondays, it's our busiest day."],
+        salary: ["We'll talk about salary in the next round, but it's in line with the market, plus a travel allowance.",
+                 "Good question, and a fair one. HR will share the exact range next round. It's competitive, plus a travel allowance."],
+        next: ["We're talking to a few more people this week. You'll hear from us within about a week, and the next step is a meeting with the team.",
+               "Next step is a short meeting with two people from the team. We'll let you know within a week either way."],
         culture: ["It's quite informal. People say what they think, and we celebrate wins with cake. A lot of cake.",
-                  "Open and friendly. We like people who speak up when something isn't working."],
-        growth: ["There's a training budget for everyone, and several people in my team started as coordinators and are now planners or team leads."],
-        you: ["I've been here six years. I started as a planner myself, so I know the job well. I still love it."],
+                  "Open and friendly. We like people who speak up when something isn't working.",
+                  "We're direct, but kind. If something goes wrong, we fix it first and talk about blame never."],
+        growth: ["There's a training budget for everyone, and several people in my team started as coordinators and are now planners or team leads.",
+                 "We really like promoting from inside. I started as a planner myself."],
+        you: ["I've been here six years. I started as a planner myself, so I know the job well. I still love it.",
+              "Six years now. What keeps me here is the team, honestly. And the problems are always new."],
         name: ["I'm Ellen, the operations manager."],
         general: ["Good question. I'd say the most important thing here is that you stay calm and keep people informed.",
                   "Hmm, good question. Honestly, it depends, but we always try to keep things simple and practical."]
-      }
+      },
+      opinions: {}, tangents: [], lowShare: [], teases: []
     }
   };
 
@@ -748,7 +884,7 @@
     family: /\b(?:family|parents|mom|mum|dad|mother|father|brothers?|sisters?|siblings?|kids|children|son|daughter|wife|husband|grandparents?)\b/g,
     pets: /\b(?:pets?|dogs?|cats?|pupp(?:y|ies)|kittens?)\b/g,
     weekend: /\b(?:weekends?|saturday|sunday|friday night|tonight|this evening)\b/g,
-    city: /\b(?:where (?:are )?you from|i'm from|i am from|come from|grew up|born in|live in|living in|moved to|moved here|amsterdam|rotterdam|utrecht|the hague|den haag|eindhoven|groningen|netherlands|holland|hometown|neighbou?rhood)\b/g,
+    city: /\b(?:where (?:are )?you from|i'm from|i am from|come from|grew up|grow up|born in|live in|living in|moved to|moved here|amsterdam|rotterdam|utrecht|the hague|den haag|eindhoven|groningen|netherlands|holland|hometown|neighbou?rhood)\b/g,
     goals: /\b(?:goals?|dreams?|future|someday|one day|ambitions?|next year|bucket list|five years|hope to|plan to|want to (?:become|start|learn|travel|move|open))\b/g,
     day: /\b(?:my day|your day|today|this morning|busy day|long day|good day)\b/g,
     host: /\b(?:host|lisa|friends? from|know (?:her|him|them) from|met (?:her|him|them) at)\b/g
@@ -788,7 +924,12 @@
     var m = lower.match(QUESTION_RE);
     if (qm < 0 && !m) return null;
     var start;
-    if (m) start = m.index;
+    if (m) {
+      var pre = t.slice(0, m.index);
+      start = Math.max(pre.lastIndexOf("."), pre.lastIndexOf("!"), pre.lastIndexOf("?")) + 1;
+      var cm = pre.lastIndexOf(",");
+      if (cm >= start && words(t.slice(start, m.index)).length > 6) start = cm + 1;
+    }
     else { // sentence that ends with ?
       var before = t.slice(0, qm), b = Math.max(before.lastIndexOf("."), before.lastIndexOf("!"), before.lastIndexOf("?"));
       start = b + 1;
@@ -839,101 +980,263 @@
       t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
   }
-  // Pick from arr, never reusing an item until all have been used (and never the same twice in a row)
-  function pick(convo, key, arr) {
-    if (!arr || !arr.length) return "";
-    var used = convo.used[key] || (convo.used[key] = []);
-    var free = [];
-    for (var i = 0; i < arr.length; i++) if (used.indexOf(i) < 0) free.push(i);
-    if (!free.length) {
-      var last = used[used.length - 1];
-      used.length = 0; if (arr.length > 1) used.push(last);
-      free = []; for (var j = 0; j < arr.length; j++) if (j !== last || arr.length === 1) free.push(j);
+  // Pick a line that hasn't been said yet in this conversation (from the first pool that still has one).
+  // Returns "" when every pool is used up, so callers can fall back to something else.
+  // true if any sentence of the line (3+ words) was already said, so lines from different pools don't overlap
+  function usedPart(convo, l) {
+    var parts = String(l).split(/(?<=[.!?])\s+/);
+    if (parts.length < 2) return false;
+    for (var i = 0; i < parts.length; i++) if (parts[i].split(" ").length >= 3 && convo.said[parts[i]]) return true;
+    return false;
+  }
+  function fresh(convo) {
+    var pools = Array.prototype.slice.call(arguments, 1);
+    for (var i = 0; i < pools.length; i++) {
+      var arr = pools[i]; if (!arr || !arr.length) continue;
+      var free = arr.filter(function (l) { return l && !convo.said[l] && !usedPart(convo, l); });
+      if (free.length) { var l = free[Math.floor(convo.rng() * free.length)]; convo.said[l] = true; return l; }
     }
-    var idx = free[Math.floor(convo.rng() * free.length)];
-    used.push(idx);
-    return arr[idx];
+    return "";
+  }
+  // Old-style pick (cycles through, avoids repeats as long as possible) - used for required lines
+  function pick(convo, key, arr) {
+    var l = fresh(convo, arr);
+    if (l) return l;
+    return arr[Math.floor(convo.rng() * arr.length)];
+  }
+  function fill(tpl, vars) {
+    var ok = true;
+    var out = tpl.replace(/\{(\w+)\}/g, function (m, k) { if (!vars[k]) ok = false; return vars[k] || ""; });
+    return ok ? out : "";
+  }
+  function freshFilled(convo, arr, vars) {
+    var free = arr.filter(function (t) { var l = fill(t, vars); return l && !convo.said[l] && !usedPart(convo, l); });
+    if (!free.length) return "";
+    var l = fill(free[Math.floor(convo.rng() * free.length)], vars); convo.said[l] = true; return l;
   }
   function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
   function titleCase(s) { return s.replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
+  function chance(convo, p) { return convo.rng() < p; }
 
-  // ---------------- Reply templates (social) ----------------
+  // ---------------- Shared reply lines (social) ----------------
   var REACT = {
-    work: ["Oh, that sounds interesting!", "Nice, that sounds like a cool job.", "Oh wow, I didn't expect that!", "That sounds busy, but fun."],
-    study: ["Oh cool, that sounds interesting.", "Nice! Studying is hard work.", "Ah, that's a good field."],
-    hobbies: ["Oh, I love that!", "That sounds really fun.", "Ha, that's a great hobby.", "Oh nice, I've always wanted to try that."],
-    sport: ["Respect! I'm impressed.", "Oh nice, that keeps you fit.", "Wow, that sounds intense!", "That's great, I wish I had that energy."],
-    travel: ["Oh wow, that sounds amazing!", "That sounds like a great trip.", "Ooh, I'm jealous!", "Wow, lucky you!"],
-    food: ["Mmm, now I'm hungry!", "Oh, that sounds delicious.", "Ha, you have good taste.", "Oh nice, I love that too."],
-    music: ["Oh nice, good taste!", "Ha, I like that.", "Cool, music is so important."],
-    movies: ["Oh, I've heard about that!", "Nice, I need some new things to watch.", "Ha, good choice."],
-    family: ["Aww, that's sweet.", "That sounds really nice.", "Family is so important."],
-    pets: ["Aww, I love that!", "Oh, cute!", "Ha, that's adorable."],
-    weekend: ["That sounds like a good weekend.", "Nice, sounds relaxing.", "Oh fun!"],
-    city: ["Oh nice!", "Ah, cool!", "Oh, I like it there."],
-    goals: ["That's a great goal.", "Wow, I love that you know what you want.", "That's really cool, I hope you do it."],
-    day: ["Glad to hear it!", "Ha, sounds like a full day.", "Nice, that's good to hear."],
-    host: ["Ah, nice!", "Oh, that's cool.", "Ha, small world!"]
+    work: ["Oh, that sounds interesting!", "Nice, that sounds like a cool job.", "Oh wow, I didn't expect that!", "That sounds busy, but fun.",
+           "Ooh, okay, tell me everything.", "Ha, that's not what I guessed at all.", "Oh nice, that's a proper job.", "Okay, that's actually really cool."],
+    study: ["Oh cool, that sounds interesting.", "Nice! Studying is hard work.", "Ah, that's a good field.", "Ooh, a student. Respect for the deadlines.",
+            "Oh nice, I miss student life sometimes. Not the exams, though.", "Okay, smart choice."],
+    hobbies: ["Oh, I love that!", "That sounds really fun.", "Ha, that's a great hobby.", "Oh nice, I've always wanted to try that.",
+              "Okay, that's a very good hobby.", "Ooh, I like people with hobbies.", "Ha, nice. Nerdy in the best way.", "That's so much better than just scrolling on your phone."],
+    sport: ["Respect! I'm impressed.", "Oh nice, that keeps you fit.", "Wow, that sounds intense!", "That's great, I wish I had that energy.",
+            "Okay, sporty. I see you.", "Ha, nice. I get tired just hearing about it.", "Oh cool, that's a good way to clear your head."],
+    travel: ["Oh wow, that sounds amazing!", "That sounds like a great trip.", "Ooh, I'm jealous!", "Wow, lucky you!",
+             "Okay, now I want to book a flight.", "Ha, that sounds like a proper adventure.", "Oh, that's on my list!", "Nice, travel stories are the best stories."],
+    food: ["Mmm, now I'm hungry!", "Oh, that sounds delicious.", "Ha, you have good taste.", "Oh nice, I love that too.",
+           "Okay, we can be friends.", "Ha, a person who takes food seriously. Good.", "Ooh, stop, I'm getting hungry."],
+    music: ["Oh nice, good taste!", "Ha, I like that.", "Cool, music is so important.", "Ooh, okay, respect.", "Ha, I did not see that coming. I love it.", "Nice, you'd be good at picking the music tonight."],
+    movies: ["Oh, I've heard about that!", "Nice, I need some new things to watch.", "Ha, good choice.", "Ooh, adding that to my list.", "Okay, solid taste.", "Ha, I love a good recommendation."],
+    family: ["Aww, that's sweet.", "That sounds really nice.", "Family is so important.", "Ha, every family has one of those.", "Aw, I like how you talk about them."],
+    pets: ["Aww, I love that!", "Oh, cute!", "Ha, that's adorable.", "Okay, now I need to see a photo.", "Ha, pets are the best people."],
+    weekend: ["That sounds like a good weekend.", "Nice, sounds relaxing.", "Oh fun!", "Ha, that's the dream.", "Okay, that's a solid plan.", "Nice, that sounds like a proper weekend."],
+    city: ["Oh nice!", "Ah, cool!", "Oh, I like it there.", "Ha, nice spot.", "Ooh, good choice of city."],
+    goals: ["That's a great goal.", "Wow, I love that you know what you want.", "That's really cool, I hope you do it.", "Okay, I believe you'll do it.", "Ooh, ambitious. I like it."],
+    day: ["Glad to hear it!", "Ha, sounds like a full day.", "Nice, that's good to hear.", "Ha, honestly that sounds like a great day.", "Okay, sounds like you earned a night out."],
+    host: ["Ah, nice!", "Oh, that's cool.", "Ha, small world!", "Ha, Lisa knows everyone.", "Oh nice, then you know how she gets about birthdays."]
   };
-  var REACT_PLACE = ["Oh, {place}! Nice.", "{place}, nice! I've heard good things.", "Ooh, {place}. Lovely."];
-  var GENERIC_REACT = ["Oh, nice!", "Ha, I like that.", "That's cool.", "Oh, interesting!", "Ah, fun!"];
-  var DETAIL_REACT = ["I love that detail!", "Ha, that's a great story.", "That's so specific, I love it."];
-  var FLAT_REACT = ["Oh, okay...", "Hm. Alright.", "Ah, okay then.", "Right... okay.", "Mm, okay."];
-  var LOW_REACT = ["Mm-hm.", "Right.", "Okay.", "Ah, okay.", "Sure."];
-  var LONG_REACT = ["Wow, okay, that's a lot!", "Ha, okay, I followed most of that!"];
-  var FOLLOW = {
-    work: ["What do you like most about it?", "How did you end up doing that?", "What's a normal day like for you?"],
-    study: ["What made you choose that?", "What do you want to do after?"],
-    hobbies: ["How did you get into that?", "How often do you do that?", "What do you like most about it?"],
-    sport: ["How long have you been doing that?", "Do you do it with friends?"],
-    travel: ["What was the best part?", "Where do you want to go next?", "Any good food there?"],
-    food: ["Do you cook a lot yourself?", "What's your go-to dish?", "Any restaurant tips for me?"],
-    music: ["Have you seen them live?", "Do you play anything yourself?"],
-    movies: ["What's it about?", "Would you recommend it?"],
-    family: ["Do you see them often?", "Are you close with them?"],
-    pets: ["What's their name?", "Do you have photos? I need to see!"],
-    weekend: ["Anything fun planned?", "Are you more of a lazy or busy weekend person?"],
-    city: ["How long have you lived there?", "Do you like it there?", "What's the best spot there?"],
-    goals: ["What's the first step?", "What made you want that?"],
-    day: ["Anything fun happen?", "What's been the best part so far?"],
-    host: ["How long have you known each other?", "Do you know many people here?"]
-  };
-  var ASK = { // starting a new topic (warm)
-    work: "So what do you do?", study: "Are you studying, or working?",
-    hobbies: "What do you like to do when you're not working?", sport: "Do you do any sports?",
-    travel: "Have you been anywhere nice lately? I'm always looking for travel ideas!", food: "What's your favourite food? Be honest!",
-    music: "What kind of music are you into?", movies: "Seen any good films or series lately?",
-    family: "Do you have any brothers or sisters?", pets: "Are you a cat person or a dog person?",
-    weekend: "Any fun plans for the weekend?", city: "Where are you from originally?",
-    goals: "What's something you really want to do in the next few years?", day: "How's your day been?",
-    host: "How do you know Lisa?"
-  };
-  var ASK_PLAIN = [["work", "So... what else do you do?"], ["travel", "Do you travel much?"], ["weekend", "Any plans this weekend?"],
-                   ["music", "What music do you like?"], ["pets", "Any pets?"], ["food", "What food do you like?"]];
+  var GENERIC_REACT = ["Oh, nice!", "Ha, I like that.", "That's cool.", "Oh, interesting!", "Ah, fun!", "Ha, okay!", "Ooh, nice.",
+                       "Ha, love that.", "Oh, really? Nice.", "Okay, cool.", "Ha, fair enough.", "Oh, that's nice."];
+  var ECHO = ["{Kw}? Nice.", "Wait, {kw}? I like that.", "Ooh, {kw}. Okay, tell me more.", "{Kw}, huh. Didn't see that coming.",
+              "{Kw}, huh? I like that.", "Oh, {kw}! Okay, that's interesting.", "{Kw}? That's cool."];
+  var REACT_PLACE = ["Oh, {place}! Nice.", "{place}, nice! I've heard good things.", "Ooh, {place}. Lovely.", "{place}? Oh, I love it there.",
+                     "Wait, {place}? I've always wanted to go.", "Ha, {place}. Good choice."];
+  var DETAIL_REACT = ["I love that detail!", "Ha, that's a great story.", "That's so specific, I love it.", "Okay, that's a very good story.",
+                      "Ha, I can totally picture that.", "See, that's the kind of thing I want to hear.", "That's such a fun detail."];
+  var FLAT_REACT = ["Oh, okay...", "Hm. Alright.", "Ah, okay then.", "Right... okay.", "Mm, okay.", "Ha, okay. Short and sweet.",
+                    "Fair enough.", "Ah. Okay.", "Mm, I see.", "Okay, a person of few words.", "Ha, alright then.", "Got it."];
   var FLAT_PROMPT = ["So, tell me something you're really into?", "What's something that made you happy this week?",
-                     "Hmm... what do you do for fun, then?"];
-  var BOUNCE = ["What about you?", "How about you?", "And you?"];
+                     "Hmm... what do you do for fun, then?", "Okay, I'll carry us for a bit. What's the best thing you ate this week?",
+                     "Come on, give me one fun fact about you.", "Okay, easier one: beach or mountains?", "What's something you could talk about for hours?",
+                     "Tell me one thing you're looking forward to."];
+  var LOW_REACT = ["Ah, nice.", "Cool, cool.", "Right, yeah.", "Mm, fair enough.", "Oh, okay. Nice.", "Ha, yeah.", "Sure, sure.", "Okay, nice.",
+                   "Ah, right.", "Mm, sounds good."];
+  var LONG_REACT = ["Wow, okay, that's a lot!", "Ha, okay, I followed most of that!", "Okay, okay, breathe, haha.", "Ha, wow, you really went for it.",
+                    "Okay, that was the long version, I love it.", "Ha, that's a whole story."];
+  var QONLY = ["Ooh, good question.", "Ha, okay, let me think.", "Hmm, good one.", "Oh, nobody asks me that.", "Ha, interview time, I see.",
+               "Okay, that's a fun question.", "Ooh, I like that question.", "Hmm, let me see."];
+  var BOUNCE = ["What about you?", "How about you?", "And you?", "Your turn.", "What's your version?", "And you? Same?", "Okay, now you.",
+                "I'm curious about yours.", "Now I want to know yours.", "Tell me yours.", "What about yours?", "Be honest, what about you?"];
+  var SPACE = ["Anyway, that's me.", "So yeah, that's my life right now.", "Long story short, I love it.", "Anyway. I could talk about that forever.",
+               "But enough about me for a second.", "So that's my little story.", "Anyway, that's my rant.", "Ha, so yeah."];
+  var ALREADY = ["Ha, I think I already told you everything about that!", "You're testing my memory now, haha. Same answer as before!",
+                 "I'll stick with my first answer on that one.", "Ha, nothing new since five minutes ago!", "Still the same, I promise, haha."];
+  var TRANS = ["Okay, totally different question:", "Random, but", "So, changing the subject a bit:", "Okay, new topic.", "Can I ask you something?",
+               "Okay, I have to ask:", "Oh, before I forget:", "Different topic, but"];
+  var HEDGE_TEASE = ["You say 'I guess' a lot. Are you always this mysterious?", "Ha, you don't sound very sure. Is that a yes?",
+                     "Maybe, probably, I think... Come on, commit to it, haha."];
+  var FLAT_TEASE = ["Wow, don't tell me too much at once, haha.", "Ha, I'm going to need a bit more than that.", "Okay, mysterious. I see."];
+  var FOLLOW = {
+    work: ["What do you like most about it?", "How did you end up doing that?", "What's a normal day like for you?", "What's the weirdest thing that happened at work?",
+           "Is it what you imagined when you were a kid?", "Do you bring work home with you, or switch off?"],
+    study: ["What made you choose that?", "What do you want to do after?", "What's the best part of it?", "Is it hard?", "Any good student stories?"],
+    hobbies: ["How did you get into that?", "How often do you do that?", "What do you like most about it?", "Are you any good? Be honest.",
+              "Could you teach me?", "What's the best moment you've had with it?"],
+    sport: ["How long have you been doing that?", "Do you do it with friends?", "What's your biggest achievement so far?", "Do you get competitive?",
+            "How do you stay motivated?"],
+    travel: ["What was the best part?", "Where do you want to go next?", "Any good food there?", "What's your best travel story?",
+             "Would you go back?", "Did anything go wrong? Those are the best stories."],
+    food: ["Do you cook a lot yourself?", "What's your go-to dish?", "Any restaurant tips for me?", "What's the best thing you've ever eaten?",
+           "Are you a good cook? Be honest."],
+    music: ["Have you seen them live?", "Do you play anything yourself?", "What's your go-to song right now?", "Best concert you've ever been to?"],
+    movies: ["What's it about?", "Would you recommend it?", "What's your all-time favourite?", "Are you a cinema person or a sofa person?"],
+    family: ["Do you see them often?", "Are you close with them?", "Who are you most like in your family?", "What are family dinners like?"],
+    pets: ["What's their name?", "Do you have photos? I need to see!", "What's their weirdest habit?", "Are they spoiled? They're spoiled, aren't they?"],
+    weekend: ["Anything fun planned?", "Are you more of a lazy or busy weekend person?", "What does a perfect Sunday look like for you?", "Any big plans coming up?"],
+    city: ["How long have you lived there?", "Do you like it there?", "What's the best spot there?", "Would you ever move?", "What do you miss about home?"],
+    goals: ["What's the first step?", "What made you want that?", "What's stopping you?", "When are you going to do it?"],
+    day: ["Anything fun happen?", "What's been the best part so far?", "Did you do anything nice for yourself?"],
+    host: ["How long have you known each other?", "Do you know many people here?", "Is she always this organised?"]
+  };
+  var ASK = { // starting a new topic
+    work: ["So what do you do?", "What do you do when you're not at parties like this?", "So what keeps you busy these days?", "What do you do for work?"],
+    study: ["Are you studying, or working?", "Did you study something, or go straight into work?"],
+    hobbies: ["What do you like to do when you're not working?", "So what do you do for fun?", "What's your hobby? And don't say Netflix.", "What do you do to relax?"],
+    sport: ["Do you do any sports?", "Are you a sporty person?", "Gym person, or more of a walk in the park person?"],
+    travel: ["Have you been anywhere nice lately? I'm always looking for travel ideas!", "Where's the best place you've ever been?", "If you could fly anywhere tomorrow, where would you go?", "Do you travel much?"],
+    food: ["What's your favourite food? Be honest!", "Can you cook, or are you a takeaway person?", "What's the best restaurant you know?", "Sweet or savoury?"],
+    music: ["What kind of music are you into?", "What's the last song you had on repeat?", "Do you go to concerts much?"],
+    movies: ["Seen any good films or series lately?", "What's your comfort movie?", "What are you watching at the moment?"],
+    family: ["Do you have any brothers or sisters?", "Are you close with your family?"],
+    pets: ["Are you a cat person or a dog person?", "Do you have any pets?", "Any pets? This is important."],
+    weekend: ["Any fun plans for the weekend?", "What are you doing this weekend?", "What's your perfect weekend?"],
+    city: ["Where are you from originally?", "Did you grow up around here?", "Where do you live now?"],
+    goals: ["What's something you really want to do in the next few years?", "What's on your bucket list?", "What's a dream you haven't told many people?"],
+    day: ["How's your day been?"],
+    host: ["How do you know Lisa?"]
+  };
+  var ASK_PLAIN = [["work", "So... what else do you do?"], ["travel", "Travel much?"], ["weekend", "Plans this weekend?"],
+                   ["music", "What music do you like?"], ["pets", "Any pets?"], ["food", "Favourite food?"], ["hobbies", "Hobbies?"], ["city", "From around here?"]];
 
-  // ---------------- Interview templates ----------------
-  var I_GOOD = ["That's a clear example, thank you.", "Great, thank you. That's helpful.", "Nice, I like that example.", "Thank you, that's very clear."];
-  var I_GOOD_GEN = ["Great, thank you.", "Thanks, that's helpful.", "Okay, great. Thank you.", "Nice, thank you for sharing that."];
-  var I_OK = ["Okay, thank you.", "Alright, thanks.", "Okay, I see."];
-  var I_PROBE = ["Could you tell me a bit more about that?", "Can you give me a concrete example?", "Okay... can you say a bit more?"];
-  var I_RESULT = ["And what was the result?", "How did it end? What changed because of what you did?", "What was the outcome, and what did you learn?"];
-  var I_TRANS = ["", "Let's move on. ", "Next question. ", "Okay, next one. "];
+  // Keyword lexicon: picks up a word he said and reacts to it specifically
+  var KEYWORDS = [
+    { re: /\bnight shifts?\b/i, kw: "night shifts", react: ["Night shifts? Respect.", "Night shifts, wow. My body could never."], follow: ["How do you stay awake?", "Do you sleep during the day then?"] },
+    { re: /\bnurs(?:e|ing)\b/i, kw: "nurse", react: ["A nurse? Respect. That's a real job.", "Oh wow, a nurse. You must have so many stories."], follow: ["What's the craziest shift you've had?", "How do you switch off after a hard day?"] },
+    { re: /\bteach(?:er|ing)\b/i, kw: "teacher", react: ["A teacher? Okay, I'm sitting up straight now.", "Teaching! That takes a lot of patience."], follow: ["What age do you teach?", "Do your students ever make you laugh?"] },
+    { re: /\b(?:developer|programmer|software|coding|code|it)\b/, kw: "IT", react: ["Ooh, a tech person. My laptop could use you.", "Tech, nice. So you're the one everyone calls when the wifi breaks."], follow: ["What do you actually build?", "Do you like it, or is it just a job?"] },
+    { re: /\bengineer(?:ing)?\b/i, kw: "engineer", react: ["An engineer? Okay, smart.", "Engineering! So you're the practical one."], follow: ["What kind of engineering?", "What's the coolest thing you've worked on?"] },
+    { re: /\bdesign(?:er)?\b/i, kw: "design", react: ["Design? Oh, I love that.", "A designer! Creative, nice."], follow: ["What do you design?", "What's your favourite thing you've made?"] },
+    { re: /\bstudent\b/i, kw: "student", react: ["A student! Nice, enjoy it while it lasts.", "Student life, ha. I remember the instant noodles."], follow: ["What are you studying?", "How many years left?"] },
+    { re: /\b(?:chef|kitchen|restaurant)\b/i, kw: "kitchen", react: ["A kitchen job? Okay, now I'm scared to cook for you.", "Restaurant life, wow. That's intense."], follow: ["What's the craziest night you've had?", "What's your signature dish?"] },
+    { re: /\b(?:bank|finance|accounting|accountant)\b/i, kw: "finance", react: ["Finance, okay, so you're good with money. Unlike me.", "Ha, a numbers person. Respect."], follow: ["Do you actually like numbers?", "What's the best part of it?"] },
+    { re: /\b(?:sales|marketing)\b/i, kw: "marketing", react: ["Marketing! So you could sell me anything.", "Sales, ha. I'll be careful, then."], follow: ["What's the hardest thing you ever had to sell?", "Do you like it?"] },
+    { re: /\bstartup\b/i, kw: "startup", react: ["A startup! Exciting and a bit chaotic, I bet.", "Startup life, ha. Free snacks and long days?"], follow: ["What does the startup do?", "Is it as crazy as people say?"] },
+    { re: /\bgym\b/i, kw: "gym", react: ["The gym? Okay, sporty.", "Ha, a gym person. Are you one of those 6am people?"], follow: ["Morning or evening workouts?", "What's your favourite exercise? Don't say leg day."] },
+    { re: /\b(?:marathon|running|run)\b/i, kw: "running", react: ["Running? Wow. I run only for trains.", "A runner! Respect, honestly."], follow: ["What's the furthest you've run?", "Do you run with music?"] },
+    { re: /\b(?:cycling|cycled|bike|biking)\b/i, kw: "cycling", react: ["Cycling! Very Dutch of you.", "Ha, cycling. In this wind? Respect."], follow: ["Where do you like to ride?", "Do you cycle in the rain too?"] },
+    { re: /\b(?:football|soccer)\b/i, kw: "football", react: ["Football! Nice.", "Ha, football. Careful, team choice is important here."], follow: ["What position do you play?", "Which team do you support?"] },
+    { re: /\b(?:climbing|bouldering)\b/i, kw: "climbing", react: ["Climbing? No way, me too!", "Ooh, a climber. Okay, I like you already."], follow: ["Indoor or outdoor?", "Where do you climb?"] },
+    { re: /\byoga\b/i, kw: "yoga", react: ["Yoga, nice. You must be very calm, then.", "Yoga! I tried it once and fell over."], follow: ["How long have you been doing yoga?"] },
+    { re: /\b(?:swimming|swim)\b/i, kw: "swimming", react: ["Swimming! That's such a good sport.", "Ha, a swimmer. Very healthy."], follow: ["Pool or sea?"] },
+    { re: /\b(?:hiking|hike)\b/i, kw: "hiking", react: ["Hiking! Nice, I love a good walk.", "Ooh, a hiker. Fresh air person."], follow: ["What's the best hike you've done?"] },
+    { re: /\b(?:tennis|padel)\b/i, kw: "padel", react: ["Ha, padel. Everyone's playing it now!", "Tennis, nice. Fancy."], follow: ["Are you competitive when you play?"] },
+    { re: /\b(?:baking|bake|baked)\b/i, kw: "baking", react: ["You bake? Okay, that's a big plus.", "Baking! Now I'm hoping for samples."], follow: ["What's your best bake?"] },
+    { re: /\bcook(?:ing|ed)?\b/i, kw: "cooking", react: ["You cook? Okay, that's a green flag.", "A cook! Nice, I like that."], follow: ["What's your signature dish?", "Who taught you to cook?"] },
+    { re: /\bpizza\b/i, kw: "pizza", react: ["Pizza is always the right answer.", "Ha, pizza. Simple but correct."], follow: ["Pineapple: yes or no? This matters."] },
+    { re: /\bsushi\b/i, kw: "sushi", react: ["Sushi! Good taste.", "Ooh, sushi. Fancy."], follow: ["Do you have a favourite sushi place?"] },
+    { re: /\bcoffee\b/i, kw: "coffee", react: ["A coffee person, I see.", "Ha, coffee. The fuel of adults."], follow: ["How many cups a day? Be honest."] },
+    { re: /\b(?:beer|wine)\b/i, kw: "drinks", react: ["Ha, good taste in drinks.", "Oh nice, a person who knows what they like."], follow: ["Do you have a favourite?"] },
+    { re: /\b(?:books?|reading|novel)\b/i, kw: "reading", react: ["A reader! That's attractive, honestly.", "Books, nice. I need recommendations."], follow: ["What's the last good book you read?"] },
+    { re: /\b(?:gaming|video games|playstation|xbox|nintendo)\b/i, kw: "gaming", react: ["A gamer! Okay, nice.", "Ha, gaming. Respect."], follow: ["What are you playing at the moment?"] },
+    { re: /\b(?:guitar|piano|drums|violin)\b/i, kw: "an instrument", react: ["You play? That's so cool.", "Wait, you play an instrument? Okay, impressed."], follow: ["How long have you been playing?", "Will you play something for me one day?"] },
+    { re: /\b(?:concerts?|festivals?)\b/i, kw: "festival", react: ["Ooh, festivals. Fun!", "Concerts are the best."], follow: ["What's the best one you've been to?"] },
+    { re: /\b(?:netflix|series)\b/i, kw: "series", react: ["Ha, a series person. Me too.", "Ooh, good, I need something new to watch."], follow: ["What's the best one you've seen this year?"] },
+    { re: /\bdogs?\b/i, kw: "dog", react: ["A dog! Okay, that's a big plus.", "Dogs are the best. Say no more."], follow: ["What kind of dog?", "What's the dog's name?"] },
+    { re: /\bcats?\b/i, kw: "cat", react: ["A cat person! We'll get along.", "Cats! Very good choice."], follow: ["What's the cat's name?", "Is the cat the boss at home?"] },
+    { re: /\b(?:kids|children|son|daughter)\b/i, kw: "kids", react: ["Aw, kids! That's lovely.", "Ha, that must keep you busy."], follow: ["How old are they?"] },
+    { re: /\b(?:sister|brother|siblings?)\b/i, kw: "siblings", react: ["Ha, siblings. Every family has its characters.", "Oh nice, I love sibling stories."], follow: ["Who's the troublemaker, you or them?"] },
+    { re: /\bjapan\b/i, kw: "Japan", react: ["Japan? Oh, that's my dream trip!", "Japan! Okay, now I'm jealous."], follow: ["What was the best thing you ate there?"] },
+    { re: /\b(?:spain|barcelona|madrid)\b/i, kw: "Spain", react: ["Spain, nice. Sun and tapas.", "Ooh, Spain. Good choice."], follow: ["Do you speak any Spanish?"] },
+    { re: /\b(?:italy|rome|milan)\b/i, kw: "Italy", react: ["Italy! The food alone, wow.", "Ooh, Italy. Pasta heaven."], follow: ["Best thing you ate there?"] },
+    { re: /\b(?:portugal|lisbon|porto)\b/i, kw: "Portugal", react: ["Portugal! I've heard it's beautiful.", "Ooh, Portugal. Pastéis de nata?"], follow: ["Would you go back?", "Who did you go with?"] },
+    { re: /\bbeach\b/i, kw: "beach", react: ["A beach person, nice.", "Ooh, the beach. I want to be there right now."], follow: ["Beach and books, or beach and sports?"] },
+    { re: /\b(?:mountains?|alps)\b/i, kw: "mountains", react: ["Mountains! Fresh air, nice.", "Ooh, a mountain person."], follow: ["Skiing or hiking?"] },
+    { re: /\broad trip\b/i, kw: "road trip", react: ["A road trip! The best kind of holiday.", "Road trips are so fun."], follow: ["Who was in charge of the music?"] },
+    { re: /\bcamping\b/i, kw: "camping", react: ["Camping! Brave.", "Ha, camping. Very outdoorsy."], follow: ["Best or worst camping story?"] },
+    { re: /\b(?:tired|exhausted|long week|busy week)\b/i, kw: "a long week", neg: true, react: ["Oh no, a long week. You deserve this then.", "Ha, same, honestly."], follow: ["What made it so busy?"] },
+    { re: /\b(?:rain|raining|weather)\b/i, kw: "the weather", neg: true, react: ["Ha, the Dutch weather. Classic.", "Ugh, the weather. Don't get me started."], follow: ["Did you get soaked on the way here?"] }
+  ];
+  function findKeyword(text) {
+    for (var i = 0; i < KEYWORDS.length; i++) if (KEYWORDS[i].re.test(text)) return KEYWORDS[i];
+    return null;
+  }
+
+  // ---------------- Memory: things he said, for callbacks later ----------------
+  var JOBS = "nurse|teacher|developer|programmer|engineer|designer|student|manager|chef|cook|doctor|lawyer|accountant|consultant|driver|electrician|carpenter|barista|waiter|waitress|plumber|mechanic|marketer|analyst|scientist|researcher|artist|musician|photographer|writer|journalist|pilot|police officer|firefighter|architect|dentist|pharmacist|vet|personal trainer|trainer|coach|planner|freelancer|cashier|receptionist|recruiter|salesman";
+  var JOB_RE = new RegExp("\\b(?:i'm|i am|work(?:ing)? as|i was)\\s+(?:a|an)\\s+(?:[a-z]+\\s)?(" + JOBS + ")\\b", "i");
+  var ACT_RE = /\bi\s+(?:really\s+|also\s+|just\s+)?(?:love|like|enjoy|adore|go|do|started)\s+([a-z]+ing)\b/i;
+  var PETNAME_RE = /\b(?:called|named)\s+([A-Z][a-z]+)\b/;
+  function remember(convo, a) {
+    var m = convo.memory, t = a.text, turn = convo.userTurns.length;
+    var j = t.match(JOB_RE); if (j && !m.job) m.job = { v: j[1].toLowerCase(), turn: turn };
+    var ac = t.match(ACT_RE); if (ac && !m.activity && !/^(?:going|doing|working|thinking|trying|being|nothing|something)$/i.test(ac[1])) m.activity = { v: ac[1].toLowerCase(), turn: turn };
+    if (a.place && !m.place) m.place = { v: a.place, turn: turn };
+    var pn = t.match(PETNAME_RE); if (pn && /\b(?:dog|cat|puppy|kitten|rabbit|bird)\b/i.test(t) && !m.pet) m.pet = { v: pn[1], turn: turn };
+    if (a.kw && !m.thing) m.thing = { v: a.kw.kw, turn: turn };
+  }
+  var CALLBACKS = {
+    job: ["So, the {job}... I'm still impressed, honestly.", "Okay, {job} by day. What are you by night?", "Wait, going back to you being a {job}. Do people always ask you for advice?",
+          "I'm trying to picture you as a {job} right now, haha.", "Says the {job}, haha."],
+    activity: ["Still thinking about your {activity} thing, by the way.", "So when do I get to see you {activity}? Kidding. Mostly.",
+               "Okay, I'm adding {activity} to the list of things I know about you."],
+    place: ["You mentioned {place} earlier. Is it a place you'd go back to?", "I keep thinking about {place} now. You've made me want to go.", "Wait, back to {place} for a second. What took you there?"],
+    pet: ["How's {pet} doing, by the way? Important question.", "Okay, I need to know more about {pet}. Priorities."],
+    combo: ["So far I've got: {job}, loves {activity}. I'm building a picture here.", "Okay, so: {job}, into {activity}... you're more interesting than you look, haha."]
+  };
+  function callback(convo) {
+    var m = convo.memory, turn = convo.userTurns.length;
+    if (turn - convo.lastCallback < 3) return "";
+    var ok = function (k) { return m[k] && turn - m[k].turn >= 2 && !convo.calledBack[k]; };
+    var vars = { job: m.job && m.job.v, activity: m.activity && m.activity.v, place: m.place && m.place.v, pet: m.pet && m.pet.v };
+    var keys = ["job", "activity", "place", "pet"].filter(ok);
+    if (ok("job") && ok("activity")) keys.unshift("combo");
+    for (var i = 0; i < keys.length; i++) {
+      var line = freshFilled(convo, CALLBACKS[keys[i]], vars);
+      if (line) {
+        convo.calledBack[keys[i]] = true;
+        if (keys[i] === "combo") convo.calledBack.job = convo.calledBack.activity = true;
+        convo.lastCallback = turn; convo.callbacks = (convo.callbacks || 0) + 1;
+        return line;
+      }
+    }
+    return "";
+  }
+
+  // ---------------- Interview lines ----------------
+  var I_GOOD = ["That's a clear example, thank you.", "Great, thank you. That's helpful.", "Nice, I like that example.", "Thank you, that's very clear.",
+                "That's a really good example, actually.", "Okay, I like how you handled that.", "Good, that's exactly the kind of thing I wanted to hear."];
+  var I_GOOD_GEN = ["Great, thank you.", "Thanks, that's helpful.", "Okay, great. Thank you.", "Nice, thank you for sharing that.", "Good, I like that.",
+                    "Okay, that gives me a good picture.", "Thanks, that's a nice answer.", "Great, that's useful to know."];
+  var I_OK = ["Okay, thank you.", "Alright, thanks.", "Okay, I see.", "Okay, noted.", "Right, thank you.", "Okay, understood."];
+  var I_ECHO = ["{X}, okay. Good to know.", "Ah, {X}. Interesting.", "{X}, nice. That's useful context.", "Okay, {X}. I like that."];
+  var I_PROBE = ["Could you tell me a bit more about that?", "Can you give me a concrete example?", "Okay... can you say a bit more?",
+                 "Could you give me an example of that?", "Tell me a bit more, I'm curious."];
+  var I_RESULT = ["And what was the result?", "How did it end? What changed because of what you did?", "What was the outcome, and what did you learn?",
+                  "And the result? Did it work?", "So what was the outcome in the end?"];
+  var I_TRANS = ["", "Let's move on. ", "Next question. ", "Okay, next one. ", "Good. Next: ", "Alright, let's keep going. ", ""];
   var I_CLOSE = ["Alright! Thank you so much for your time today. We'll be in touch within a week.",
-                 "Great, thank you for coming in. It was nice to meet you. We'll let you know soon."];
+                 "Great, thank you for coming in. It was nice to meet you. We'll let you know soon.",
+                 "Perfect. Thanks for your time, I really enjoyed this. You'll hear from us within a week."];
   var I_DONE = ["Thanks again! You can end the interview whenever you're ready.", "It was really nice talking to you. Good luck!",
                 "Thank you, that's everything from my side. Tap End when you're ready to see how you did."];
-  var I_MORE = ["Anything else you'd like to know?", "Any other questions?"];
+  var I_MORE = ["Anything else you'd like to know?", "Any other questions?", "What else can I tell you?"];
+  var I_HEDGE = ["Take your time, by the way. No trick questions here.", "You can be confident about it, it sounds like a real strength."];
 
   var FLAT_RE = /^(?:yes|yeah|yep|no|nope|ok|okay|fine|good|nothing|nothing much|not much|not really|i don't know|dunno|maybe|sure|cool|nice|thanks|thank you|alright|same|it's fine|it was fine|it's okay|pretty good|good thanks|fine thanks)[.!]?$/i;
 
   // ---------------- Conversation state ----------------
   function newConversation(personaId, seed) {
     var p = PERSONAS[personaId] || PERSONAS.date;
-    return { persona: p, rng: rngFrom(seed || 1), used: {}, messages: [], userTurns: [],
+    return { persona: p, rng: rngFrom(seed || 1), used: {}, said: {}, messages: [], userTurns: [],
              noAskStreak: 0, lastAskedTopic: null, followed: {}, visited: {}, qIndex: 0, probed: {}, done: false,
+             memory: {}, calledBack: {}, lastCallback: -9, lastTangent: -9, lastHadQuestion: true, teased: 0,
              partnerWords: 0, userWords: 0, startedAt: Date.now() };
   }
 
@@ -947,11 +1250,20 @@
   function addPartner(convo, text) {
     convo.messages.push({ from: "them", text: text });
     convo.partnerWords += words(text).length;
+    convo.lastHadQuestion = /\?/.test(text);
+    String(text).split(/(?<=[.!?])\s+/).forEach(function (s) { convo.said[s] = true; });
   }
 
   function lastPartnerText(convo) {
     for (var i = convo.messages.length - 1; i >= 0; i--) if (convo.messages[i].from === "them") return convo.messages[i].text;
     return "";
+  }
+
+  var PROPER_SKIP = /^(?:I|I'm|I've|I'd|I'll|Im|OK|Okay|The|A|An|And|But|So|My|We|It|In|On|At|Yes|No|Hi|Hey|Well)$/;
+  function properNoun(t) {
+    var re = /([.!?]\s+|^)?\b([A-Z][a-zA-Z'\-]+(?:\s[A-Z][a-zA-Z'\-]+)?)/g, m;
+    while ((m = re.exec(t)) !== null) { if (m[1] !== undefined) continue; if (!PROPER_SKIP.test(m[2])) return m[2]; }
+    return null;
   }
 
   // Analyse a user turn and update the state (used by both reply engines)
@@ -982,11 +1294,13 @@
     }
     var outside = q ? words(t.slice(0, q.start)).length : n;
     var placeM = t.match(KNOWN_PLACES);
+    var statement = q ? t.slice(0, q.start) : t;
     var a = {
       text: t, words: n, seconds: opts.seconds || null, typed: !!opts.typed, result: r, signals: sig,
       question: !!q, questionText: q ? q.segment : "", questionOnly: !!q && outside < 4, qTopic: qTopic,
-      topics: topics, topic: topics[0] || null,
+      topics: topics, topic: detectTopics(statement)[0] || topics[0] || null,
       place: placeM ? titleCase(placeM[1]) : null,
+      kw: findKeyword(statement) || null, proper: properNoun(statement),
       flat: !q && (n < 5 || (FLAT_RE.test(lower.replace(/[,]/g, "")) && n < 8)),
       long: (opts.seconds && opts.seconds > 60) || n > 160,
       detail: sig.nums + sig.props + sig.examples > 0 || sig.story >= 2,
@@ -998,6 +1312,7 @@
     a.lowEngagement = !interview && convo.noAskStreak >= 2;
     a.verdict = turnVerdict(a, p);
     convo.userTurns.push(a);
+    remember(convo, a);
     convo.messages.push({ from: "me", text: t });
     convo.userWords += n;
     return a;
@@ -1007,77 +1322,159 @@
   function ruleReply(convo, a) {
     var reply = convo.persona.kind === "interview" ? interviewReply(convo, a) : socialReply(convo, a);
     var prev = lastPartnerText(convo), tries = 0;
-    while (reply === prev && tries++ < 5) reply = convo.persona.kind === "interview" ? interviewReply(convo, a) : socialReply(convo, a);
-    return reply;
+    while ((reply === prev || !reply) && tries++ < 5) reply = convo.persona.kind === "interview" ? interviewReply(convo, a) : socialReply(convo, a);
+    return reply || pick(convo, "generic", GENERIC_REACT);
   }
 
-  function nextAgendaTopic(convo) {
-    var ag = convo.persona.agenda;
-    for (var i = 0; i < ag.length; i++) if (!convo.visited[ag[i]]) return ag[i];
-    convo.visited = {}; return ag[Math.floor(convo.rng() * ag.length)];
+  function nextAgendaTopic(convo, avoid) {
+    var ag = convo.persona.agenda.filter(function (t) { return t !== avoid; });
+    var open = ag.filter(function (t) { return !convo.visited[t]; });
+    if (open.length) return open[Math.floor(convo.rng() * Math.min(2, open.length))];
+    return ag[Math.floor(convo.rng() * ag.length)];
+  }
+
+  function shareAbout(convo, topic) { // a line about the persona's life (never repeated)
+    var p = convo.persona;
+    return fresh(convo, p.answers[topic] || []);
+  }
+
+  function askAbout(convo, topic) {
+    var q = fresh(convo, ASK[topic] || []);
+    if (q) { convo.visited[topic] = true; convo.lastAskedTopic = topic; }
+    return q;
   }
 
   function socialReply(convo, a) {
-    var p = convo.persona, parts = [], low = a.lowEngagement;
+    var p = convo.persona, turn = convo.userTurns.length, out = [];
+    // less interested only if he keeps not asking AND gives little (a rich answer still gets a real reaction)
+    var low = a.lowEngagement && (convo.noAskStreak >= 3 || !(a.detail || a.words > 10));
+    var r = convo.rng(), size = r < 0.3 ? "short" : r < 0.75 ? "medium" : "long";
+    if (low) size = "short";
     if (a.topic) convo.visited[a.topic] = true;
-    // 1) React to what they said
-    if (!a.questionOnly) {
-      if (a.flat) parts.push(pick(convo, "flat", FLAT_REACT));
-      else if (low) parts.push(pick(convo, "low", LOW_REACT));
-      else if (a.long && convo.rng() < 0.5) parts.push(pick(convo, "long", LONG_REACT));
-      else if (a.place && (a.topic === "travel" || a.topic === "city")) parts.push(pick(convo, "place", REACT_PLACE).replace("{place}", a.place));
-      else if (a.topic && REACT[a.topic]) parts.push(pick(convo, "react-" + a.topic, REACT[a.topic]));
-      else parts.push(pick(convo, "react", GENERIC_REACT));
-      if (!a.flat && !low && a.detail && a.words > 12 && convo.rng() < 0.4) parts.push(pick(convo, "detail", DETAIL_REACT));
+    var vars = { kw: a.kw && a.kw.kw, Kw: a.kw && cap(a.kw.kw), place: a.place };
+    var add = function (t, kind) { if (t) out.push({ t: t, k: kind }); return !!t; };
+    var mustAsk = !convo.lastHadQuestion || a.flat;
+
+    // --- Less interested (he keeps answering but never asks back): subtle, not robotic
+    if (low && !a.question) {
+      if (!mustAsk && chance(convo, 0.65) && add(fresh(convo, p.lowShare), "share")) { convo.lastAskedTopic = null; return finish(convo, out, size, low); }
+      add(a.flat ? fresh(convo, FLAT_REACT, LOW_REACT) : fresh(convo, LOW_REACT, GENERIC_REACT), "react");
+      var opts2 = ASK_PLAIN.filter(function (x) { return !convo.visited[x[0]] && x[0] !== a.topic && !convo.said[x[1]]; });
+      if (!opts2.length) opts2 = ASK_PLAIN.filter(function (x) { return !convo.said[x[1]]; });
+      if (opts2.length) { var pl = opts2[Math.floor(convo.rng() * opts2.length)]; convo.said[pl[1]] = true; add(pl[1], "ask"); convo.lastAskedTopic = pl[0]; convo.visited[pl[0]] = true; }
+      else add(askAbout(convo, nextAgendaTopic(convo, a.topic)), "ask");
+      return finish(convo, out, size, low);
     }
-    // 2) Answer their question from the persona
-    if (a.question) {
-      var topic = a.qTopic || "general";
-      parts.push(pick(convo, "ans-" + topic, p.answers[topic] || p.answers.general));
-      convo.visited[topic] = true;
-      // 3) Sometimes ask something back
-      var shared = !a.questionOnly && a.topic && a.topic !== topic && FOLLOW[a.topic] && !convo.followed[a.topic];
-      if (shared && convo.rng() < 0.7) {
-        convo.followed[a.topic] = true;
-        parts.push(pick(convo, "follow-" + a.topic, FOLLOW[a.topic])); convo.lastAskedTopic = a.topic;
-      } else if (!a.questionOnly && a.words > 8 && convo.rng() < 0.5) {
-        convo.lastAskedTopic = null; // they already shared; let them lead
-      } else if (convo.rng() < 0.6) {
-        if (topic !== "general" && topic !== "name" && topic !== "age" && FOLLOW[topic] && convo.rng() < 0.5 && ASK[topic]) {
-          parts.push(ASK[topic].replace(/^So /, "").replace(/^./, function (c) { return c.toUpperCase(); }));
-        } else parts.push(pick(convo, "bounce", BOUNCE));
-        convo.lastAskedTopic = topic;
-      } else convo.lastAskedTopic = null;
-      return parts.join(" ");
-    }
-    // 3) No question from the user: the partner keeps it going
-    if (a.flat) {
-      parts.push(pick(convo, "flatprompt", FLAT_PROMPT)); convo.lastAskedTopic = "hobbies";
-    } else if (low) {
-      var opts2 = ASK_PLAIN.filter(function (x) { return !convo.visited[x[0]] && x[0] !== a.topic; });
-      if (!opts2.length) opts2 = ASK_PLAIN.filter(function (x) { return x[0] !== a.topic; });
-      var pl = opts2[Math.floor(convo.rng() * opts2.length)]; parts.push(pl[1]); convo.lastAskedTopic = pl[0]; convo.visited[pl[0]] = true;
-    } else if (a.topic && FOLLOW[a.topic] && !convo.followed[a.topic]) {
-      convo.followed[a.topic] = true;
-      parts.push(pick(convo, "follow-" + a.topic, FOLLOW[a.topic])); convo.lastAskedTopic = a.topic;
+
+    // --- 1) React to what he said (pick up a word he used when possible)
+    if (a.questionOnly) {
+      if (chance(convo, 0.5)) add(fresh(convo, QONLY), "react");
+    } else if (a.flat) {
+      add(fresh(convo, FLAT_REACT, LOW_REACT), "react");
+      if (convo.teased < 2 && chance(convo, 0.3) && add(fresh(convo, FLAT_TEASE), "flavour")) convo.teased++;
     } else {
-      var nt = nextAgendaTopic(convo); convo.visited[nt] = true;
-      // share a little about themselves first, then ask (keeps it two-sided)
-      if (convo.rng() < 0.4 && p.answers[nt]) parts.push(pick(convo, "ans-" + nt, p.answers[nt]).split(/(?<=[.!])\s/)[0]);
-      parts.push(ASK[nt] || pick(convo, "bounce", BOUNCE)); convo.lastAskedTopic = nt;
+      var react = "", neg = a.kw && a.kw.neg;
+      if (a.long && chance(convo, 0.5)) react = fresh(convo, LONG_REACT);
+      if (!react && a.kw && chance(convo, 0.85)) react = fresh(convo, a.kw.react);
+      if (!react && a.place && (a.topic === "travel" || a.topic === "city")) react = freshFilled(convo, REACT_PLACE, vars);
+      if (!react && a.kw && !neg && chance(convo, 0.6)) react = freshFilled(convo, ECHO, vars);
+      if (!react && a.topic) react = fresh(convo, REACT[a.topic]);
+      if (!react && !neg) react = fresh(convo, GENERIC_REACT, DETAIL_REACT);
+      add(react, "react");
+      // a little flavour: tease, opinion, or praise for a detail
+      if (size !== "short") {
+        var f = convo.rng();
+        if (a.result.hedges >= 2 && convo.teased < 2 && f < 0.5) { if (add(fresh(convo, HEDGE_TEASE), "flavour")) convo.teased++; }
+        else if (f < 0.25 && !neg && (a.detail || a.kw) && convo.teased < 3 && turn >= 2) { if (add(fresh(convo, p.teases), "flavour")) convo.teased++; }
+        else if (f < 0.6 && a.topic && p.opinions[a.topic]) add(fresh(convo, p.opinions[a.topic]), "flavour");
+        else if (f < 0.8 && a.detail && a.words > 12 && !neg) add(fresh(convo, DETAIL_REACT), "flavour");
+      }
     }
-    return parts.join(" ");
+
+    // --- 2) He asked something: answer from the persona's life
+    if (a.question) {
+      // "Have you been?" after talking about Lisbon is about Lisbon
+      var topic = (a.qTopic && a.qTopic !== "general") ? a.qTopic : ((!a.questionOnly && a.topic) || "general");
+      var ans = shareAbout(convo, topic);
+      if (!ans) ans = (fresh(convo, ALREADY) + " " + (shareAbout(convo, "general") || "")).trim();
+      add(ans, "answer");
+      convo.visited[topic] = true;
+      if (size === "long" && p.opinions[topic]) add(fresh(convo, p.opinions[topic]), "flavour");
+      var shared = !a.questionOnly && a.topic && a.topic !== topic, e = convo.rng(), asked = false;
+      var already = !a.questionOnly && a.topic === topic;   // he already told me about this, so no "what about you?"
+      if (already && e >= 0.45 && e < 0.75) {
+        var fq3 = !convo.followed[topic] && FOLLOW[topic] && fresh(convo, FOLLOW[topic]);
+        if (fq3) { convo.followed[topic] = true; asked = add(fq3, "ask"); convo.lastAskedTopic = topic; }
+        else if (chance(convo, 0.5)) add(fresh(convo, SPACE), "space");
+        e = 1;
+      }
+      if (shared && e < 0.45) {
+        var fq = (a.kw && !convo.followed["kw:" + a.kw.kw] && fresh(convo, a.kw.follow)) || (!convo.followed[a.topic] && fresh(convo, FOLLOW[a.topic]));
+        if (fq) { if (a.kw) convo.followed["kw:" + a.kw.kw] = true; convo.followed[a.topic] = true; asked = add(fq, "ask"); convo.lastAskedTopic = a.topic; }
+      } else if (e < 0.75) {
+        asked = add(fresh(convo, BOUNCE), "ask"); if (asked) convo.lastAskedTopic = topic;
+      } else if (chance(convo, 0.5)) add(fresh(convo, SPACE), "space");
+      if (!asked) convo.lastAskedTopic = null;
+      return finish(convo, out, size, low);
+    }
+
+    // --- 3) He didn't ask anything: keep it going, but not always with a question
+    if (a.flat) {
+      add(fresh(convo, FLAT_PROMPT) || askAbout(convo, nextAgendaTopic(convo)) || fresh(convo, BOUNCE), "ask");
+      convo.lastAskedTopic = convo.lastAskedTopic || "hobbies"; return finish(convo, out, size, low);
+    }
+    // callback to something he said earlier
+    var cb = turn >= 3 && chance(convo, 0.55) ? callback(convo) : "";
+    if (cb) { add(cb, /\?$/.test(cb) ? "ask" : "cb"); if (/\?$/.test(cb)) return finish(convo, out, size, low); }
+    // follow up on a word or topic he just mentioned (first mention of a keyword: always)
+    var fq2 = "", g = convo.rng();
+    if (a.kw && !convo.followed["kw:" + a.kw.kw]) { fq2 = fresh(convo, a.kw.follow); if (fq2) convo.followed["kw:" + a.kw.kw] = true; }
+    if (!fq2 && a.topic && FOLLOW[a.topic] && (convo.followed[a.topic] || 0) < 2 && g < 0.7) { fq2 = fresh(convo, FOLLOW[a.topic]); if (fq2) convo.followed[a.topic] = (convo.followed[a.topic] || 0) + 1; }
+    if (!fq2 && !mustAsk && !cb && g < 0.85 && a.topic) {
+      // share something related and leave space for him
+      if (add(shareAbout(convo, a.topic), "share")) { if (chance(convo, 0.35)) add(fresh(convo, SPACE), "space"); convo.lastAskedTopic = null; return finish(convo, out, size, low); }
+    }
+    if (fq2) {
+      if (size === "long" && a.topic) add(shareAbout(convo, a.topic), "share");
+      add(fq2, "ask"); convo.lastAskedTopic = a.topic;
+    } else {
+      // move on naturally to a topic not covered yet
+      var nt = nextAgendaTopic(convo, a.topic), q2 = askAbout(convo, nt);
+      if (q2) {
+        if (size !== "short" || chance(convo, 0.5)) add(fresh(convo, TRANS), "trans");
+        add(q2, "ask");
+        if (size === "long") { var sh = shareAbout(convo, nt); if (sh) add(sh.split(/(?<=[.!])\s/)[0], "share"); }
+      } else add(fresh(convo, BOUNCE), "ask");
+    }
+    return finish(convo, out, size, low);
+  }
+
+  function finish(convo, out, size, low) {
+    var turn = convo.userTurns.length;
+    // keep replies short-ish: drop flavour first, then extra sharing
+    var limit = size === "short" ? 2 : size === "medium" ? 3 : 4;
+    ["flavour", "space", "share", "trans", "cb"].forEach(function (kind) {  // callbacks are kept longest
+      for (var i = 0; i < out.length && out.length > limit; i++) if (out[i].k === kind) { out.splice(i, 1); i--; }
+    });
+    // occasional little tangent (only when there's room)
+    if (!low && size !== "short" && out.length < limit && turn - convo.lastTangent >= 4 && turn >= 2 && chance(convo, 0.15)) {
+      var tg = fresh(convo, convo.persona.tangents);
+      if (tg) { out.unshift({ t: tg, k: "tangent" }); convo.lastTangent = turn; }
+    }
+    var s = out.map(function (o) { return o.t; }).filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+    s = s.replace(/(Random, but|Different topic, but) (\w)/g, function (m, a2, c) { return a2 + " " + c.toLowerCase(); });
+    return s;
   }
 
   function interviewReply(convo, a) {
     var p = convo.persona, parts = [], ag = p.agenda;
     var qi = Math.min(convo.qIndex, ag.length - 1), cur = ag[qi];
     if (convo.done) {
-      if (a.question && !a.flat) return pick(convo, "ians-" + a.qTopic, p.answers[a.qTopic] || p.answers.general) + " " + pick(convo, "imore", I_MORE);
+      if (a.question && !a.flat) return (shareAbout(convo, a.qTopic) || pick(convo, "ians", p.answers.general)) + " " + pick(convo, "imore", I_MORE);
       return pick(convo, "idone", I_DONE);
     }
     if (a.question && !a.flat) {
-      parts.push(pick(convo, "ians-" + a.qTopic, p.answers[a.qTopic] || p.answers.general));
+      parts.push(shareAbout(convo, a.qTopic) || shareAbout(convo, "general") || pick(convo, "ians", p.answers[a.qTopic] || p.answers.general));
       if (cur.final) { parts.push(pick(convo, "imore", I_MORE)); return parts.join(" "); }
     } else if (cur.final) {
       convo.done = true; return pick(convo, "iclose", I_CLOSE);
@@ -1088,7 +1485,10 @@
       return pick(convo, "iok", I_OK) + " " + pick(convo, "iresult", I_RESULT);
     } else {
       var good = a.result.score >= 70 || (a.detail && a.result.hedges <= 1);
+      var echo = a.proper && !a.place && chance(convo, 0.5) ? freshFilled(convo, I_ECHO, { X: a.proper }) : "";
+      if (echo) parts.push(echo);
       parts.push(good ? (cur.behavioral ? pick(convo, "igood", I_GOOD) : pick(convo, "igoodgen", I_GOOD_GEN)) : pick(convo, "iok", I_OK));
+      if (a.result.hedges >= 2 && chance(convo, 0.5)) { var h = fresh(convo, I_HEDGE); if (h) parts.push(h); }
     }
     convo.qIndex = Math.min(qi + 1, ag.length - 1);
     var nq = ag[convo.qIndex];
@@ -1244,6 +1644,8 @@
       ? "You are " + p.name + ", a friendly but professional hiring manager. Scene: " + p.scene + ". Ask one interview question at a time (about the candidate, their motivation, strengths, a problem they solved, a disagreement, a weakness, future plans; at the end ask if they have questions). If they tell a story without a result, ask about the result. If an answer is very short, ask for more detail. Answer questions about the job from your facts."
       : "You are " + p.name + ". " + p.bio + " Scene: " + p.scene + ". You are chatting with the user. React naturally to what they say. If they ask you something, answer from your facts, then often ask something back. If their answer is short or flat, sound a little less excited. If they keep answering without ever asking you anything, become slightly less engaged (shorter, plainer replies), but stay polite.";
     var sys = role + "\nYour facts:\n" + facts.join("\n") +
+      "\nStyle: " + (p.style || "natural and friendly") + ". Sound like a real person talking: contractions, small opinions, little stories from your life, the odd joke. " +
+      "React to a specific word or detail they said. Remember what they told you earlier and sometimes refer back to it. Don't end every reply with a question; sometimes share something and leave space. Mix short and longer replies. " +
       "\nRules: stay in character, never mention being an AI. Reply in 1 to 3 short, casual spoken sentences (no emojis, no lists, no stage directions). Never be rude, sexual or offensive. " +
       "Also write a short coaching note for the user about their last message (max 15 words, plain simple English: one good thing or one thing to fix). " +
       'Respond ONLY with JSON: {"reply": "...", "coach": "..."}';
@@ -1316,17 +1718,199 @@
     });
   }
 
+  var LINES = { FLAT_REACT: FLAT_REACT, LOW_REACT: LOW_REACT, GENERIC_REACT: GENERIC_REACT, FLAT_TEASE: FLAT_TEASE, KEYWORDS: KEYWORDS, CALLBACKS: CALLBACKS };
+  function lineCount() {
+    var n = 0, add = function (x) { if (Array.isArray(x)) x.forEach(add); else if (typeof x === "string") n++; else if (x && typeof x === "object") Object.keys(x).forEach(function (k) { if (k !== "re") add(x[k]); }); };
+    add([REACT, GENERIC_REACT, ECHO, REACT_PLACE, DETAIL_REACT, FLAT_REACT, FLAT_PROMPT, LOW_REACT, LONG_REACT, QONLY, BOUNCE, SPACE, ALREADY, TRANS, HEDGE_TEASE, FLAT_TEASE,
+         FOLLOW, ASK, ASK_PLAIN, KEYWORDS.map(function (k) { return [k.react, k.follow]; }), CALLBACKS, I_GOOD, I_GOOD_GEN, I_OK, I_ECHO, I_PROBE, I_RESULT, I_TRANS, I_CLOSE, I_DONE, I_MORE, I_HEDGE]);
+    Object.keys(PERSONAS).forEach(function (k) { var p = PERSONAS[k]; add([p.opener, p.answers, p.opinions, p.tangents, p.lowShare, p.teases]); });
+    return n;
+  }
+
   var api = { PERSONAS: PERSONAS, GEMINI_MODELS: GEMINI_MODELS, newConversation: newConversation, opener: opener,
               addPartner: addPartner, observeUser: observeUser, ruleReply: ruleReply, partnerReply: partnerReply,
               liveCoach: liveCoach, turnVerdict: turnVerdict, summarize: summarize, detectTopics: detectTopics,
               findQuestion: findQuestion, followUpWords: followUpWords, buildGeminiRequest: buildGeminiRequest,
-              parseGeminiResponse: parseGeminiResponse, lastPartnerText: lastPartnerText };
+              parseGeminiResponse: parseGeminiResponse, lastPartnerText: lastPartnerText, LINES: LINES, lineCount: lineCount };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.CharismaChat = api;
 })(typeof window !== "undefined" ? window : globalThis);
 </script>
 
 <!-- ===================== App / UI ===================== -->
+<script id="speech">
+(function (root) {
+  "use strict";
+  function clean(t) { return String(t || "").replace(/\s+/g, " ").trim(); }
+  function lc(t) { return clean(t).toLowerCase(); }
+
+  // Merge one recognition session's results. Android Chrome sometimes repeats earlier text
+  // inside later results ("hello" then "hello world"), so cumulative repeats are collapsed.
+  function mergeResults(results) {
+    var finals = [], interim = [];
+    for (var i = 0; i < (results ? results.length : 0); i++) {
+      var r = results[i], t = clean(r && r[0] && r[0].transcript);
+      if (!t) continue;
+      var list = r.isFinal ? finals : interim;
+      var last = list[list.length - 1];
+      if (last && lc(t).indexOf(lc(last)) === 0) list[list.length - 1] = t;       // cumulative: replace
+      else if (last && lc(last).indexOf(lc(t)) === 0) { /* shorter repeat: skip */ }
+      else list.push(t);
+    }
+    var fin = finals.join(" "), inter = interim.join(" ");
+    if (inter && fin && lc(inter).indexOf(lc(fin)) === 0) inter = clean(inter.slice(fin.length)); // interim repeating the final part
+    return { final: fin, interim: inter };
+  }
+
+  // Add one finished chunk (from a session that ended) to the turn, without duplicating text.
+  function appendChunk(chunks, text) {
+    var t = clean(text); if (!t) return chunks;
+    var joined = chunks.join(" ");
+    var last = chunks[chunks.length - 1];
+    if (joined && lc(t).indexOf(lc(joined)) === 0) { chunks.length = 0; chunks.push(t); return chunks; }   // re-sent everything + more
+    if (last) {
+      var L = lc(last), T = lc(t);
+      if (T === L && T.split(" ").length >= 2) return chunks;                        // exact re-send
+      if (T.indexOf(L) === 0) { chunks[chunks.length - 1] = t; return chunks; }       // extended last chunk
+      if (T.split(" ").length >= 3 && lc(joined).slice(-T.length) === T) return chunks; // re-send of the tail
+    }
+    chunks.push(t); return chunks;
+  }
+
+  var SILENCE = { short: 2000, normal: 3500, long: 5000, off: 0 };
+  // Should a tap-mode turn be sent now because he stopped talking?
+  function shouldAutoSend(o) {
+    return o.mode === "tap" && o.silenceMs > 0 && !!clean(o.text) && o.lastHeard > 0 && (o.now - o.lastHeard) >= o.silenceMs;
+  }
+
+  var ERRORS = {
+    "not-allowed": "Microphone blocked. Allow mic access for this page (tap the 🔒 icon in the address bar), then try again.",
+    "service-not-allowed": "Speech recognition isn't allowed here. Try Chrome, and open the page over https://.",
+    "audio-capture": "No microphone found, or another app is using it. Close other apps that use the mic and try again.",
+    "network": "Speech recognition needs an internet connection (Chrome sends audio to its speech service)."
+  };
+
+  // A speech listener that survives Android's short sessions: it restarts right away when a
+  // session ends, keeps every chunk exactly once, ignores 'no-speech', and on stop waits for the
+  // last words (final result or finalWaitMs) before handing over the text.
+  function createListener(env) {
+    var now = env.now || function () { return Date.now(); };
+    var st = env.setTimeout || setTimeout, ct = env.clearTimeout || clearTimeout;
+    var L = { active: false, stopping: false, fatal: false, chunks: [], sessionFinal: "", interim: "", rec: null, cb: null,
+              startT: 0, stopT: 0, firstHeard: 0, lastHeard: 0, restarts: 0, noSpeech: 0, sid: 0, finishTimer: null, lastRestart: 0 };
+    L.fullText = function (withInterim) {
+      var parts = L.chunks.slice();
+      if (L.sessionFinal) appendChunk(parts, L.sessionFinal);
+      if (withInterim && L.interim) appendChunk(parts, L.interim);
+      return parts.join(" ").replace(/\s+/g, " ").trim();
+    };
+    L.speakingSeconds = function () {
+      if (!L.firstHeard) return 0;
+      // first words arrive ~1 s after you start talking, so add that back
+      return Math.max(1, (L.lastHeard - L.firstHeard) / 1000 + 1.0);
+    };
+    function commitSession() {
+      if (L.sessionFinal) appendChunk(L.chunks, L.sessionFinal);
+      if (L.interim) appendChunk(L.chunks, L.interim);
+      L.sessionFinal = ""; L.interim = "";
+    }
+    function makeRec() {
+      var r = new env.SR(), sid = ++L.sid;
+      r.lang = env.getLang ? env.getLang() : "en-US";
+      r.interimResults = true;
+      r.continuous = !env.isAndroid;   // Android: short sessions + auto-restart (continuous mode repeats text there)
+      r.maxAlternatives = 1;
+      r.onresult = function (e) {
+        if (sid !== L.sid) return;
+        var before = L.fullText(true), m = mergeResults(e.results);
+        L.sessionFinal = m.final; L.interim = m.interim;
+        var full = L.fullText(true);
+        if (full !== before) { var t = now(); if (!L.firstHeard) L.firstHeard = t; L.lastHeard = t; }
+        if (L.cb && L.cb.onUpdate) L.cb.onUpdate(L.fullText(false), L.interim, full);
+      };
+      r.onsoundstart = r.onspeechstart = function () { if (sid === L.sid && L.cb && L.cb.onActivity) L.cb.onActivity(); };
+      r.onerror = function (e) {
+        if (sid !== L.sid) return;
+        if (e.error === "no-speech") { L.noSpeech++; return; }   // quiet: onend follows and we restart
+        if (e.error === "aborted") return;
+        L.fatal = true;
+        if (L.cb && L.cb.onError) L.cb.onError(ERRORS[e.error] || ("Speech error: " + e.error), e.error);
+      };
+      r.onend = function () {
+        if (sid !== L.sid) return;
+        commitSession();
+        if (L.stopping) { finish(); return; }
+        if (L.active && !L.fatal) { restart(); return; }
+        if (L.fatal) { L.active = false; L.sid++; if (L.cb && L.cb.onAbort) L.cb.onAbort(); }
+      };
+      return r;
+    }
+    function startRec() { L.rec = makeRec(); L.rec.start(); }
+    function restart() {
+      L.restarts++;
+      var quick = now() - L.lastRestart < 300; L.lastRestart = now();
+      var go = function () {
+        if (!L.active || L.stopping) return;
+        try { startRec(); }
+        catch (err) {
+          st(function () {
+            if (!L.active || L.stopping) return;
+            try { startRec(); } catch (e2) { L.fatal = true; L.active = false; if (L.cb && L.cb.onError) L.cb.onError("The microphone stopped. Tap to try again.", "restart"); }
+          }, 200);
+        }
+      };
+      if (quick) st(go, 250); else go();   // back off if sessions end instantly
+    }
+    function finish() {
+      if (!L.stopping) return;
+      L.stopping = false; ct(L.finishTimer);
+      commitSession();
+      L.sid++;   // ignore anything the old session still sends
+      var cb = L.cb;
+      if (cb && cb.onEnd) cb.onEnd(L.fullText(false), (L.stopT - L.startT) / 1000, L.speakingSeconds());
+    }
+    L.start = function (cb) {
+      if (!env.SR) return false;
+      L.abort();
+      L.cb = cb; L.chunks = []; L.sessionFinal = ""; L.interim = ""; L.fatal = false; L.stopping = false;
+      L.firstHeard = 0; L.lastHeard = 0; L.restarts = 0; L.noSpeech = 0;
+      try { startRec(); }
+      catch (err) { if (cb.onError) cb.onError("Couldn't start the microphone: " + err.message, "start"); return false; }
+      L.active = true; L.startT = now();
+      return true;
+    };
+    // Graceful stop: waits for the final result (or finalWaitMs), then calls cb.onEnd(text, seconds, speakingSeconds)
+    L.stop = function () {
+      if (!L.active) return false;
+      L.active = false; L.stopping = true; L.stopT = now();
+      try { L.rec && L.rec.stop(); } catch (e) {}
+      L.finishTimer = st(finish, env.finalWaitMs || 900);
+      return true;
+    };
+    // Silent stop: throws away the turn
+    L.abort = function () {
+      var was = L.active || L.stopping;
+      L.active = false; L.stopping = false; ct(L.finishTimer); L.sid++;
+      if (L.rec) { var r = L.rec; L.rec = null; try { r.abort(); } catch (e) {} }
+      return was;
+    };
+    // Clear what was heard so far and keep listening ("Say it again")
+    L.reset = function () {
+      var cb = L.cb, wasActive = L.active;
+      L.abort();
+      L.chunks = []; L.sessionFinal = ""; L.interim = ""; L.firstHeard = 0; L.lastHeard = 0;
+      if (wasActive && cb) return L.start(cb);
+      return false;
+    };
+    return L;
+  }
+
+  var api = { mergeResults: mergeResults, appendChunk: appendChunk, createListener: createListener, shouldAutoSend: shouldAutoSend, SILENCE: SILENCE, ERRORS: ERRORS };
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  else root.CharismaSpeech = api;
+})(typeof window !== "undefined" ? window : globalThis);
+
+</script>
 <script id="app">
 (function () {
   "use strict";
@@ -1381,7 +1965,8 @@
 
   var HKEY = "charismaPractice.history.v1", LKEY = "charismaPractice.lang", MKEY = "charismaPractice.mode",
       MUTEKEY = "charismaPractice.mute", GKEY = "charismaPractice.geminiKey", GMKEY = "charismaPractice.geminiModel",
-      HFKEY = "charismaPractice.handsFree", ASKEY = "charismaPractice.autoSend";
+      HFKEY = "charismaPractice.handsFree", TMKEY = "charismaPractice.talkMode",
+      SILKEY = "charismaPractice.silence", SORKEY = "charismaPractice.sendOnRelease";
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
 
@@ -1394,95 +1979,9 @@
   // ======================================================================
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   var isAndroid = /Android/i.test(navigator.userAgent);
-  var SR_ERRORS = {
-    "not-allowed": "Microphone blocked. Allow mic access for this page (tap the 🔒 icon in the address bar), then try again.",
-    "service-not-allowed": "Speech recognition isn't allowed here. Try Chrome, and open the page over https://.",
-    "audio-capture": "No microphone found. Check that your mic is connected and not used by another app.",
-    "network": "Speech recognition needs an internet connection (Chrome sends audio to its speech service)."
-  };
-
-  var Listener = {
-    active: false, finals: [], sessionFinal: "", interim: "", rec: null, stopping: false, fatal: false,
-    startT: 0, firstHeard: 0, lastHeard: 0, cb: null, finishTimer: null,
-    fullText: function (withInterim) {
-      var parts = this.finals.concat([this.sessionFinal]);
-      if (withInterim) parts.push(this.interim);
-      return parts.join(" ").replace(/\s+/g, " ").trim();
-    },
-    speakingSeconds: function () {
-      if (!this.firstHeard) return 0;
-      // first words arrive ~1 s after you start talking, so add that back
-      return Math.max(1, (this.lastHeard - this.firstHeard) / 1000 + 1.0);
-    },
-    _new: function () {
-      var self = this, r = new SR();
-      r.lang = $("lang").value;
-      r.interimResults = true;
-      // Android Chrome repeats text in continuous mode, so use short sessions and auto-restart.
-      r.continuous = !isAndroid;
-      r.maxAlternatives = 1;
-      r.onresult = function (e) {
-        var fin = "", inter = "";
-        for (var i = 0; i < e.results.length; i++) {
-          var t = e.results[i][0].transcript;
-          if (e.results[i].isFinal) fin += t + " "; else inter += t;
-        }
-        var before = self.fullText(true);
-        self.sessionFinal = fin.trim(); self.interim = inter.trim();
-        var now = Date.now();
-        if (self.fullText(true) !== before) { if (!self.firstHeard) self.firstHeard = now; self.lastHeard = now; }
-        if (self.cb && self.cb.onUpdate) self.cb.onUpdate(self.fullText(false), self.interim);
-      };
-      r.onerror = function (e) {
-        if (e.error === "no-speech" || e.error === "aborted") return;
-        self.fatal = true;
-        if (self.cb && self.cb.onError) self.cb.onError(SR_ERRORS[e.error] || ("Speech error: " + e.error));
-      };
-      r.onend = function () {
-        if (self.sessionFinal) self.finals.push(self.sessionFinal);
-        if (self.interim && (self.stopping || isAndroid)) self.finals.push(self.interim); // keep unfinished words
-        self.sessionFinal = ""; self.interim = "";
-        if (self.active && !self.stopping && !self.fatal) {
-          try { self.rec = self._new(); self.rec.start(); } catch (err) {}
-        } else if (self.stopping) self._finish();
-        else if (self.fatal) { self.active = false; if (self.cb && self.cb.onAbort) self.cb.onAbort(); }
-      };
-      return r;
-    },
-    start: function (cb) {
-      if (!SR) return false;
-      this.abort();
-      this.cb = cb; this.finals = []; this.sessionFinal = ""; this.interim = "";
-      this.fatal = false; this.stopping = false; this.firstHeard = 0; this.lastHeard = 0;
-      try { this.rec = this._new(); this.rec.start(); }
-      catch (err) { if (cb.onError) cb.onError("Couldn't start the microphone: " + err.message); return false; }
-      this.active = true; this.startT = Date.now();
-      return true;
-    },
-    // Graceful stop: waits for the last words, then calls cb.onEnd(text, seconds)
-    stop: function () {
-      if (!this.active) return;
-      var self = this;
-      this.active = false; this.stopping = true;
-      this.stopT = Date.now();
-      try { this.rec && this.rec.stop(); } catch (e) {}
-      this.finishTimer = setTimeout(function () { self._finish(); }, 1800); // fallback if onend never fires
-    },
-    _finish: function () {
-      if (!this.stopping) return;
-      this.stopping = false; clearTimeout(this.finishTimer);
-      if (this.interim) { this.finals.push(this.interim); this.interim = ""; }
-      var cb = this.cb;
-      if (cb && cb.onEnd) cb.onEnd(this.fullText(false), (this.stopT - this.startT) / 1000, this.speakingSeconds());
-    },
-    // Silent stop: throws away the result
-    abort: function () {
-      var wasActive = this.active || this.stopping;
-      this.active = false; this.stopping = false; clearTimeout(this.finishTimer);
-      if (this.rec) { var r = this.rec; this.rec = null; r.onend = null; r.onresult = null; r.onerror = null; try { r.abort(); } catch (e) {} }
-      return wasActive;
-    }
-  };
+  // Android Chrome repeats text in continuous mode, so it uses short sessions that restart
+  // by themselves; CharismaSpeech stitches the pieces together without losing or doubling words.
+  var Listener = CharismaSpeech.createListener({ SR: SR, isAndroid: isAndroid, getLang: function () { return $("lang").value; }, finalWaitMs: 900 });
 
   function fmt(s) { s = Math.floor(s); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -1602,11 +2101,15 @@
   // ======================================================================
   // Conversation mode
   // ======================================================================
-  var convo = null, personaId = "date", phase = "idle", silenceTimer = null, chatTick = null, ttsTimer = null;
-  var SILENCE_MS = 1800;
+  var convo = null, personaId = "date", phase = "idle", chatTick = null, ttsTimer = null;
+  var isMobile = isAndroid || /Mobi|iPhone|iPad/i.test(navigator.userAgent) || (window.matchMedia && matchMedia("(pointer: coarse)").matches);
   var muted = lsGet(MUTEKEY) === "1";
   var handsFree = lsGet(HFKEY) !== "0";
-  var autoSend = lsGet(ASKEY) !== "0";
+  var talkMode = lsGet(TMKEY) || (isMobile ? "hold" : "tap");
+  var silenceKey = lsGet(SILKEY) || "normal";
+  var sendOnRelease = lsGet(SORKEY) === "1";
+  function silenceMs() { return CharismaSpeech.SILENCE[silenceKey] || 0; }
+  function needsReview() { return talkMode === "hold" ? !sendOnRelease : silenceMs() === 0; }
 
   function renderPersonaPick() {
     document.querySelectorAll(".persona").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.p === personaId)); });
@@ -1614,16 +2117,30 @@
     $("personaBio").textContent = p.emoji + " " + p.name + ": " + p.bio;
   }
 
+  function micLabel() {
+    if (talkMode === "hold") return phase === "listening" ? "Release to send" : "Hold to talk";
+    return phase === "listening" ? "Stop" : "🎤 Tap to talk";
+  }
   function setPhase(ph, msg) {
     phase = ph;
-    var mic = $("cMic");
-    mic.classList.toggle("rec", ph === "listening");
-    mic.textContent = ph === "listening" ? "Stop" : "🎤 Talk";
-    mic.disabled = !SR || ph === "thinking" || ph === "ended";
-    $("cDone").disabled = ph !== "listening";
+    var mic = $("cMic"), listening = ph === "listening";
+    mic.classList.toggle("rec", listening);
+    mic.classList.toggle("hold", talkMode === "hold");
+    mic.innerHTML = '<span class="ic">🎤</span><span class="lb"></span>';
+    mic.querySelector(".lb").textContent = micLabel().replace("🎤 ", "");
+    mic.disabled = !SR || ph === "thinking" || ph === "ended" || ph === "finishing" || ph === "review";
+    $("cDone").hidden = talkMode === "hold";
+    $("cDone").disabled = !listening;
+    $("sayAgain").hidden = !(listening || ph === "review");
+    $("listenInd").hidden = !listening;
     $("cSend").disabled = ph === "thinking" || ph === "ended";
     $("cInput").disabled = ph === "ended";
+    if (ph !== "review") $("reviewBox").hidden = true;
     if (msg !== undefined) $("cStatus").textContent = msg;
+  }
+  function yourTurnMsg() {
+    if (!SR) return "Type your answer below.";
+    return talkMode === "hold" ? "Your turn: hold the button while you talk, then let go." : (handsFree ? "" : "Your turn: tap to talk, or type below.");
   }
 
   function scrollChat() { var el = $("chatLog"); el.scrollTop = el.scrollHeight; }
@@ -1643,7 +2160,7 @@
     if (!convo) return;
     var p = convo.persona, el = $("mood"), last = convo.userTurns[convo.userTurns.length - 1];
     var meh = p.kind !== "interview" && (convo.noAskStreak >= 2 || (last && last.flat));
-    el.textContent = meh ? "😐 " + p.name + " seems less interested" : (p.kind === "interview" ? "🙂 " + p.name + " is listening" : "😊 " + p.name + " is interested");
+    el.textContent = meh ? "😐 " + p.name + " seems a bit less into it" : (p.kind === "interview" ? "🙂 " + p.name + " is listening" : "😊 " + p.name + " is enjoying this");
     el.className = "mood" + (meh ? " meh" : "");
   }
 
@@ -1656,11 +2173,43 @@
     });
   }
   function coachCtx(typed) {
-    var last = convo.userTurns[convo.userTurns.length - 1];
     var cur = convo.persona.kind === "interview" ? convo.persona.agenda[Math.min(convo.qIndex, convo.persona.agenda.length - 1)] : null;
     return { category: convo.persona.category, prevPartner: Chat.lastPartnerText(convo), typed: typed,
              lowEngagement: convo.persona.kind !== "interview" && convo.noAskStreak >= 2,
              behavioral: !!(cur && cur.behavioral) };
+  }
+
+  // ---- Level meter: real mic level on desktop; on phones it follows the speech events
+  // (opening a second mic stream next to speech recognition can break it on Android, so we don't).
+  var meter = { level: 0, raf: 0, stream: null, ctx: null, decay: null };
+  function setLevel(v) { meter.level = Math.max(0, Math.min(1, v)); $("listenInd").style.setProperty("--lvl", meter.level.toFixed(2)); }
+  function bumpLevel() { setLevel(0.55 + Math.random() * 0.4); }
+  function startMeter() {
+    stopMeter();
+    meter.decay = setInterval(function () { if (!meter.stream) setLevel(meter.level * 0.75); }, 120);
+    var real = !isMobile && navigator.mediaDevices && navigator.mediaDevices.getUserMedia && (window.AudioContext || window.webkitAudioContext);
+    if (!real) return;
+    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }).then(function (stream) {
+      if (phase !== "listening") { stream.getTracks().forEach(function (t) { t.stop(); }); return; }
+      meter.stream = stream;
+      var AC = window.AudioContext || window.webkitAudioContext; meter.ctx = new AC();
+      var an = meter.ctx.createAnalyser(); an.fftSize = 512;
+      meter.ctx.createMediaStreamSource(stream).connect(an);
+      var buf = new Uint8Array(an.fftSize);
+      var loop = function () {
+        an.getByteTimeDomainData(buf);
+        var sum = 0; for (var i = 0; i < buf.length; i++) { var x = (buf[i] - 128) / 128; sum += x * x; }
+        setLevel(Math.sqrt(sum / buf.length) * 4);
+        meter.raf = requestAnimationFrame(loop);
+      };
+      loop();
+    }).catch(function () { /* no meter, the speech-based one still works */ });
+  }
+  function stopMeter() {
+    clearInterval(meter.decay); cancelAnimationFrame(meter.raf);
+    if (meter.stream) { meter.stream.getTracks().forEach(function (t) { t.stop(); }); meter.stream = null; }
+    if (meter.ctx) { try { meter.ctx.close(); } catch (e) {} meter.ctx = null; }
+    setLevel(0);
   }
 
   // ---- Text to speech ----
@@ -1675,11 +2224,19 @@
     var want = pool.filter(function (v) { return gender === "female" ? fem.test(v.name) : (mal.test(v.name) && !/female/i.test(v.name)); });
     return want[0] || pool[0];
   }
+  // Calls done() only when the voice has really finished (+300 ms), so the mic doesn't hear it
   function speak(text, done) {
     clearTimeout(ttsTimer);
-    var finished = false;
-    var fin = function () { if (finished) return; finished = true; clearTimeout(ttsTimer); done && done(); };
-    if (muted || !window.speechSynthesis || typeof SpeechSynthesisUtterance === "undefined") { setTimeout(fin, 50); return; }
+    var finished = false, polls = 0;
+    var fin = function () {
+      if (finished) return; finished = true; clearTimeout(ttsTimer);
+      var wait = function () {
+        if (window.speechSynthesis && speechSynthesis.speaking && polls++ < 40) { ttsTimer = setTimeout(wait, 100); return; }
+        ttsTimer = setTimeout(function () { done && done(); }, 300);
+      };
+      wait();
+    };
+    if (muted || !window.speechSynthesis || typeof SpeechSynthesisUtterance === "undefined") { ttsTimer = setTimeout(function () { done && done(); }, 50); return; }
     try {
       speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(text);
@@ -1688,9 +2245,13 @@
       u.rate = 1.02; u.pitch = convo && convo.persona.voice === "male" ? 0.95 : 1.05;
       u.onend = fin; u.onerror = fin;
       speechSynthesis.speak(u);
-      // fallback if the browser never fires onend
-      ttsTimer = setTimeout(fin, 2500 + text.split(/\s+/).length * 420);
+      ttsTimer = setTimeout(fin, 2500 + text.split(/\s+/).length * 420); // fallback if onend never fires
     } catch (e) { fin(); }
+  }
+  function interruptPartner() {
+    if (phase === "partner") phase = "idle";
+    clearTimeout(ttsTimer);
+    if (window.speechSynthesis) speechSynthesis.cancel();
   }
 
   function partnerSays(text) {
@@ -1699,13 +2260,13 @@
     setPhase("partner", muted ? "" : convo.persona.name + " is talking…");
     speak(text, function () {
       if (!convo || phase !== "partner") return;
-      setPhase("idle", SR ? (handsFree ? "" : "Tap 🎤 Talk to answer, or type below.") : "Type your answer below.");
-      if (handsFree && SR && !convo.ended) startListening();
+      setPhase("idle", yourTurnMsg());
+      if (talkMode === "tap" && handsFree && SR && !convo.ended) startListening();
     });
   }
 
   function startChat() {
-    Listener.abort(); if (window.speechSynthesis) speechSynthesis.cancel();
+    Listener.abort(); stopMeter(); if (window.speechSynthesis) speechSynthesis.cancel();
     convo = Chat.newConversation(personaId, (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0);
     $("chatLog").innerHTML = ""; $("convSummary").hidden = true; $("chatCard").hidden = false;
     $("pickCard").hidden = true;
@@ -1716,54 +2277,99 @@
     $("chatCard").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  var liveRow = null;
+  var liveRow = null, pendingSecs = null;
+  function showLive(txt) {
+    if (!liveRow) liveRow = addBubble("me", "", "live");
+    liveRow.querySelector(".txt").textContent = txt || "…";
+    scrollChat();
+  }
   function startListening() {
-    if (!SR || !convo || phase === "thinking" || phase === "ended") return;
-    phase = "starting"; clearTimeout(ttsTimer);
-    if (window.speechSynthesis) speechSynthesis.cancel();
-    hideNotice();
+    if (!SR || !convo || phase === "thinking" || phase === "ended" || phase === "finishing" || phase === "listening") return;
+    interruptPartner();
+    hideNotice(); $("reviewBox").hidden = true;
     var ok = Listener.start({
-      onUpdate: function (fin, interim) {
-        var txt = (fin + " " + interim).trim();
-        if (!liveRow) liveRow = addBubble("me", "", "live");
-        liveRow.querySelector(".txt").textContent = txt || "…";
-        scrollChat();
-        renderChips(Chat.liveCoach(txt, Listener.speakingSeconds(), coachCtx(false)));
+      onUpdate: function (fin, interim, full) {
+        bumpLevel();
+        showLive(full);
+        renderChips(Chat.liveCoach(full, Listener.speakingSeconds(), coachCtx(false)));
       },
+      onActivity: bumpLevel,
       onError: function (msg) { showNotice(msg, true); stopListeningUI(); },
       onAbort: function () { stopListeningUI(); },
       onEnd: function (text, secs, speakSecs) {
-        clearInterval(chatTick);
-        if (!text) { removeLive(); setPhase("idle", "I didn't catch that. Tap 🎤 Talk to try again, or type."); return; }
-        submitUser(text, Math.max(1, Math.min(secs, speakSecs || secs)), false);
+        clearInterval(chatTick); stopMeter();
+        var s = Math.max(1, Math.min(secs, speakSecs || secs));
+        if (!text) { removeLive(); setPhase("idle", "I didn't catch that. " + (talkMode === "hold" ? "Hold the button and try again" : "Tap to try again") + ", or type."); return; }
+        if (needsReview()) showReview(text, s); else submitUser(text, s, false);
       }
     });
     if (!ok) { setPhase("idle"); return; }
-    setPhase("listening", autoSend ? "Listening… I'll send it after a short pause." : "Listening… tap Done when you finish.");
+    setPhase("listening", talkMode === "hold" ? "Listening… let go when you're done." :
+      (silenceMs() ? "Listening… I'll send it after " + (silenceMs() / 1000) + " s of quiet." : "Listening… tap Done when you finish."));
+    showLive("");
+    startMeter();
     renderChips(Chat.liveCoach("", 0, coachCtx(false)));
     clearInterval(chatTick);
     chatTick = setInterval(function () {
       if (phase !== "listening") { clearInterval(chatTick); return; }
-      var heard = Listener.speakingSeconds();
-      $("cTimer").textContent = fmt((Date.now() - Listener.startT) / 1000);
-      if (Listener.firstHeard) renderChips(Chat.liveCoach(Listener.fullText(true), heard, coachCtx(false)));
-      if (autoSend && Listener.fullText(true) && Listener.lastHeard && Date.now() - Listener.lastHeard > SILENCE_MS) finishListening();
-      if ((Date.now() - Listener.startT) > 180000) finishListening(); // safety stop
-    }, 250);
+      var t = Date.now(), el = t - Listener.startT, full = Listener.fullText(true);
+      $("cTimer").textContent = fmt(el / 1000);
+      if (Listener.firstHeard) renderChips(Chat.liveCoach(full, Listener.speakingSeconds(), coachCtx(false)));
+      if (CharismaSpeech.shouldAutoSend({ mode: talkMode, silenceMs: silenceMs(), text: full, lastHeard: Listener.lastHeard, now: t })) finishListening();
+      else if (talkMode === "tap" && !Listener.firstHeard && el > 20000) { Listener.abort(); stopListeningUI(); setPhase("idle", "I didn't hear anything. Tap to try again, or type."); }
+      else if (el > 180000) finishListening(); // safety stop
+    }, 200);
   }
   function removeLive() { if (liveRow) { liveRow.remove(); liveRow = null; } }
-  function stopListeningUI() { clearInterval(chatTick); removeLive(); if (phase === "listening") setPhase("idle", "Tap 🎤 Talk to try again, or type."); }
+  function stopListeningUI() { clearInterval(chatTick); stopMeter(); removeLive(); if (phase === "listening" || phase === "finishing") setPhase("idle", yourTurnMsg()); }
   function finishListening() {
     if (phase !== "listening") return;
     clearInterval(chatTick);
-    setPhase("thinking", "Got it…");
+    setPhase("finishing", "Getting your last words…");
     Listener.stop();
+  }
+  function showReview(text, secs) {
+    removeLive(); pendingSecs = secs;
+    setPhase("review", "Check your words. Fix anything, then Send.");
+    $("reviewText").value = text; $("reviewBox").hidden = false;
+    $("reviewBox").scrollIntoView({ block: "nearest" });
+  }
+  function sayAgain() {
+    if (phase === "listening") {
+      Listener.reset(); removeLive(); showLive("");
+      renderChips([]); $("cStatus").textContent = "Okay, cleared. Go again.";
+    } else if (phase === "review") {
+      $("reviewBox").hidden = true; setPhase("idle", talkMode === "hold" ? "Okay, hold the button and say it again." : "");
+      if (talkMode === "tap") startListening();
+    }
+  }
+
+  // Hold to talk
+  var holding = false, pressT = 0;
+  function holdStart(e) {
+    if (talkMode !== "hold" || !SR || !convo || convo.ended) return;
+    if (e && e.preventDefault) e.preventDefault();
+    if (phase === "thinking" || phase === "finishing" || phase === "review" || holding) return;
+    holding = true; pressT = Date.now();
+    $("cMic").classList.add("pressed");
+    startListening();
+  }
+  function holdEnd() {
+    if (!holding) return;
+    holding = false; $("cMic").classList.remove("pressed");
+    if (phase !== "listening") return;
+    if (Date.now() - pressT < 450 && !Listener.fullText(true)) {
+      Listener.abort(); stopListeningUI();
+      setPhase("idle", "Keep holding the button while you talk, then let go.");
+      return;
+    }
+    finishListening();
   }
 
   function submitUser(text, seconds, typed) {
     if (!convo || convo.ended) return;
     if (Listener.abort()) clearInterval(chatTick);
-    removeLive();
+    stopMeter(); removeLive(); $("reviewBox").hidden = true;
     var row = addBubble("me", text);
     var a = Chat.observeUser(convo, text, { seconds: typed ? null : seconds, typed: typed });
     var vl = document.createElement("div"); vl.className = "vline " + a.verdict.tone; vl.textContent = a.verdict.text;
@@ -1777,7 +2383,7 @@
     var started = Date.now();
     Chat.partnerReply(convo, a, { apiKey: key, model: lsGet(GMKEY) || Chat.GEMINI_MODELS[0], fetch: key ? window.fetch.bind(window) : null })
       .then(function (res) {
-        var wait = Math.max(0, (res.source === "rules" ? 700 : 0) - (Date.now() - started));
+        var wait = Math.max(0, (res.source === "rules" ? 600 + Math.min(900, res.text.length * 6) : 0) - (Date.now() - started));
         setTimeout(function () {
           typing.remove();
           if (!convo || convo.ended) return;
@@ -1791,15 +2397,15 @@
 
   function pauseChat() {
     if (phase === "partner") phase = "idle";
-    Listener.abort(); clearInterval(chatTick); removeLive(); clearTimeout(ttsTimer);
+    Listener.abort(); clearInterval(chatTick); removeLive(); stopMeter(); clearTimeout(ttsTimer);
     if (window.speechSynthesis) speechSynthesis.cancel();
-    if (convo && !convo.ended && phase !== "thinking") setPhase("idle", "Paused. Tap 🎤 Talk or type to continue.");
+    if (convo && !convo.ended && phase !== "thinking") setPhase("idle", "Paused. " + yourTurnMsg());
   }
 
   function endChat() {
     if (!convo) return;
     convo.ended = true; phase = "ended";
-    Listener.abort(); clearInterval(chatTick); removeLive(); clearTimeout(ttsTimer);
+    Listener.abort(); clearInterval(chatTick); removeLive(); stopMeter(); clearTimeout(ttsTimer);
     if (window.speechSynthesis) speechSynthesis.cancel();
     setPhase("ended", "Conversation ended.");
     var s = Chat.summarize(convo);
@@ -1823,6 +2429,14 @@
   function backToPick() {
     pauseChat(); convo = null;
     $("chatCard").hidden = true; $("convSummary").hidden = true; $("pickCard").hidden = false;
+  }
+
+  function renderMicSettings() {
+    $("talkMode").value = talkMode; $("silence").value = silenceKey;
+    $("hfBox").checked = handsFree; $("sorBox").checked = sendOnRelease;
+    $("silRow").hidden = talkMode !== "tap"; $("hfLabel").hidden = talkMode !== "tap"; $("sorLabel").hidden = talkMode !== "hold";
+    $("cMic").classList.toggle("hold", talkMode === "hold");
+    if (phase !== "listening" && phase !== "finishing") setPhase(phase);
   }
 
   // ---- Settings (optional Gemini key) ----
@@ -1899,18 +2513,33 @@
   // Conversation controls
   document.querySelectorAll(".persona").forEach(function (b) { b.addEventListener("click", function () { personaId = b.dataset.p; renderPersonaPick(); }); });
   $("startChat").addEventListener("click", startChat);
-  $("cMic").addEventListener("click", function () {
-    if (phase === "listening") finishListening();
-    else { clearTimeout(ttsTimer); startListening(); }
+  var mic = $("cMic");
+  mic.addEventListener("click", function () {
+    if (talkMode !== "tap") return;
+    if (phase === "listening") finishListening(); else startListening();
   });
+  mic.addEventListener("pointerdown", function (e) {
+    if (talkMode !== "hold") return;
+    try { mic.setPointerCapture(e.pointerId); } catch (err) {}
+    holdStart(e);
+  });
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (ev) { mic.addEventListener(ev, function () { if (talkMode === "hold") holdEnd(); }); });
+  mic.addEventListener("keydown", function (e) { if (talkMode === "hold" && (e.key === " " || e.key === "Enter") && !e.repeat) holdStart(e); });
+  mic.addEventListener("keyup", function (e) { if (talkMode === "hold" && (e.key === " " || e.key === "Enter")) holdEnd(); });
+  mic.addEventListener("contextmenu", function (e) { e.preventDefault(); });
   $("cDone").addEventListener("click", finishListening);
+  $("sayAgain").addEventListener("click", sayAgain);
+  $("reviewSend").addEventListener("click", function () {
+    var t = $("reviewText").value.trim();
+    if (!t) { sayAgain(); return; }
+    submitUser(t, pendingSecs, false);
+  });
+  $("reviewAgain").addEventListener("click", sayAgain);
   $("cForm").addEventListener("submit", function (e) {
     e.preventDefault();
     var t = $("cInput").value.trim();
-    if (!t || phase === "thinking" || !convo || convo.ended) return;
-    phase = "typing";
-    if (window.speechSynthesis) speechSynthesis.cancel();
-    clearTimeout(ttsTimer);
+    if (!t || phase === "thinking" || phase === "finishing" || !convo || convo.ended) return;
+    interruptPartner(); phase = "typing";
     $("cInput").value = "";
     submitUser(t, null, true);
   });
@@ -1928,9 +2557,10 @@
     if (muted && window.speechSynthesis) speechSynthesis.cancel();
   });
   $("muteBtn").textContent = muted ? "🔇" : "🔊";
-  $("hfBox").checked = handsFree; $("asBox").checked = autoSend;
+  $("talkMode").addEventListener("change", function () { if (phase === "listening") { Listener.abort(); stopListeningUI(); } talkMode = $("talkMode").value; lsSet(TMKEY, talkMode); renderMicSettings(); if (phase === "idle") $("cStatus").textContent = yourTurnMsg(); });
+  $("silence").addEventListener("change", function () { silenceKey = $("silence").value; lsSet(SILKEY, silenceKey); });
   $("hfBox").addEventListener("change", function () { handsFree = $("hfBox").checked; lsSet(HFKEY, handsFree ? "1" : "0"); });
-  $("asBox").addEventListener("change", function () { autoSend = $("asBox").checked; lsSet(ASKEY, autoSend ? "1" : "0"); });
+  $("sorBox").addEventListener("change", function () { sendOnRelease = $("sorBox").checked; lsSet(SORKEY, sendOnRelease ? "1" : "0"); });
   // Settings
   var gm = $("gModel");
   Chat.GEMINI_MODELS.forEach(function (m) { var o = document.createElement("option"); o.value = m; o.textContent = m; gm.appendChild(o); });
@@ -1947,7 +2577,7 @@
     showNotice("Voice-to-text isn't supported in this browser. For speaking practice, open this page in Google Chrome (Android or desktop). You can still type your answers.", false);
     $("micBtn").disabled = true;
     $("typebox").hidden = false; $("typeToggle").hidden = true;
-    $("cMic").disabled = true; $("hfRow").hidden = true;
+    $("cMic").disabled = true; $("micSet").hidden = true;
   } else if (window.isSecureContext === false) {
     showNotice("The microphone needs a secure page (https://). If Talk doesn't work, open this app from its https link, or type your answer.", false);
   }
@@ -1956,11 +2586,13 @@
   renderPersonaPick();
   renderSettings();
   renderHist();
+  renderMicSettings();
   setPhase("idle");
   setMode(lsGet(MKEY) === "chat" ? "chat" : "quick");
   // for automated tests
   window.__cp = { showResult: showResult, setCat: setCat, Q: Q };
-  window.__chat = { get convo() { return convo; }, get phase() { return phase; }, startChat: startChat, endChat: endChat, Listener: Listener };
+  window.__chat = { get convo() { return convo; }, get phase() { return phase; }, startChat: startChat, endChat: endChat, Listener: Listener,
+    get talkMode() { return talkMode; }, get silenceMs() { return silenceMs(); } };
 })();
 </script>
 </body>
