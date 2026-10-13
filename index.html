@@ -1655,7 +1655,7 @@
   }
 
   // ---------------- Optional Gemini (user's own key) ----------------
-  var GEMINI_MODELS = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.8-flash", "gemini-2.5-flash"];
+  var GEMINI_MODELS = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.8-flash", "gemini-3.6-flash", "gemini-2.5-flash", "gemini-2.5-flash-lite"];
 
   function buildGeminiRequest(convo) {
     var p = convo.persona, facts = [];
@@ -1703,46 +1703,84 @@
     return { reply: reply, coach: typeof co === "string" ? norm(co).slice(0, 160) : "", coachObj: co && typeof co === "object" ? co : null };
   }
 
-  // Returns a Promise of { text, coach, source: "gemini"|"rules", error? }. Never rejects.
-  function partnerReply(convo, a, opts) {
-    opts = opts || {};
-    var rules = function (err) { return { text: ruleReply(convo, a), coach: "", source: "rules", error: err || null }; };
-    if (!opts.apiKey || !opts.fetch) return Promise.resolve(rules());
-    var model = opts.model || GEMINI_MODELS[0];
+  // Is this Gemini error "busy / rate-limited" (worth trying another model)?
+  function isBusyError(status, msg) {
+    if (status === 503 || status === 429 || status === 500) return true;
+    return /overloaded|high demand|resource[_ ]exhausted|unavailable|try again later/i.test(msg || "");
+  }
+  function isKeyError(status, msg) {
+    return /API[_ ]KEY[_ ]INVALID|api key not valid|API key expired|PERMISSION_DENIED|UNAUTHENTICATED/i.test(msg || "") || status === 401;
+  }
+
+  // One Gemini call. Resolves to the parsed reply or rejects with err.status / err.busy / err.keyError.
+  function callGemini(model, body, opts) {
     var url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent";
     var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
     var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, opts.timeoutMs || 15000);
-    var body;
-    try { body = JSON.stringify(buildGeminiRequest(convo)); } catch (e) { clearTimeout(timer); return Promise.resolve(rules("could not build request")); }
     return Promise.resolve().then(function () {
       return opts.fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": opts.apiKey },
                                body: body, signal: ctrl ? ctrl.signal : undefined });
     }).then(function (res) {
       if (!res.ok) {
-        return res.text().then(function (t) {
-          var msg = "error " + res.status;
+        var fail = function (t) {
+          var msg = "error " + res.status, raw = t || "";
           try { var j = JSON.parse(t); if (j.error && j.error.message) msg += ": " + j.error.message.slice(0, 120); } catch (e) {}
-          throw new Error(msg);
-        }, function () { throw new Error("error " + res.status); });
+          var err = new Error(msg); err.status = res.status;
+          err.keyError = isKeyError(res.status, raw + " " + msg);
+          err.busy = !err.keyError && isBusyError(res.status, raw + " " + msg);
+          err.notFound = res.status === 404;
+          throw err;
+        };
+        return (res.text ? res.text() : Promise.resolve("")).then(fail, function () { return fail(""); });
       }
       return res.json();
-    }).then(function (data) {
-      clearTimeout(timer);
-      var g = parseGeminiResponse(data);
-      // keep the rule engine's state roughly in sync (interview question position)
-      if (convo.persona.kind === "interview") {
-        var ag = convo.persona.agenda;
-        for (var i = convo.qIndex + 1; i < ag.length; i++) {
-          var key = ag[i].q.toLowerCase().split(" ").slice(-3).join(" ").replace(/[?.]/g, "");
-          if (g.reply.toLowerCase().indexOf(key) >= 0) { convo.qIndex = i; break; }
-        }
+    }).then(function (data) { clearTimeout(timer); return parseGeminiResponse(data); },
+            function (err) { clearTimeout(timer); if (err && err.name === "AbortError") { throw new Error("timed out"); } throw err; });
+  }
+
+  // Returns a Promise of { text, coach, source: "gemini"|"rules", model?, error?, busy?, keyError? }. Never rejects.
+  // Tries opts.model first, then the rest of GEMINI_MODELS. A busy/rate-limited model (503/429/500/"overloaded")
+  // gets one short retry with backoff, then the next model is tried. An invalid key stops at once.
+  function partnerReply(convo, a, opts) {
+    opts = opts || {};
+    var rules = function (err, extra) { var r = { text: ruleReply(convo, a), coach: "", source: "rules", error: err || null };
+      if (extra) Object.keys(extra).forEach(function (k) { r[k] = extra[k]; }); return r; };
+    if (!opts.apiKey || !opts.fetch) return Promise.resolve(rules());
+    var body;
+    try { body = JSON.stringify(buildGeminiRequest(convo)); } catch (e) { return Promise.resolve(rules("could not build request")); }
+    var order = [];
+    [opts.model].concat(opts.models || GEMINI_MODELS).forEach(function (m) { if (m && order.indexOf(m) < 0) order.push(m); });
+    var backoff = opts.backoffMs != null ? opts.backoffMs : 700;
+    var sleep = opts.sleep || function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+    var lastErr = null, allBusy = true;
+
+    function attempt(i, retried) {
+      if (i >= order.length) {
+        return rules(allBusy ? "busy" : (lastErr && lastErr.message) || "failed", { busy: allBusy });
       }
-      return { text: g.reply, coach: g.coach, coachObj: g.coachObj, source: "gemini" };
-    }).catch(function (err) {
-      clearTimeout(timer);
-      var msg = err && err.name === "AbortError" ? "timed out" : (err && err.message) || "failed";
-      return rules(msg);
-    });
+      var model = order[i];
+      return callGemini(model, body, opts).then(function (g) {
+        if (convo.persona.kind === "interview") {
+          var ag = convo.persona.agenda;
+          for (var k = convo.qIndex + 1; k < ag.length; k++) {
+            var key = ag[k].q.toLowerCase().split(" ").slice(-3).join(" ").replace(/[?.]/g, "");
+            if (g.reply.toLowerCase().indexOf(key) >= 0) { convo.qIndex = k; break; }
+          }
+        }
+        return { text: g.reply, coach: g.coach, coachObj: g.coachObj, source: "gemini", model: model };
+      }, function (err) {
+        lastErr = err;
+        if (err && err.keyError) return rules(/key not valid/i.test(err.message) ? err.message : "API key not valid (" + err.message + ")", { keyError: true });
+        if (err && err.busy) {
+          if (!retried) return sleep(backoff).then(function () { return attempt(i, true); });
+          return attempt(i + 1, false);
+        }
+        if (err && err.notFound) { allBusy = false; return attempt(i + 1, false); }   // model name gone: try the next
+        allBusy = false;
+        return rules((err && err.message) || "failed");
+      });
+    }
+    return attempt(0, false).catch(function (err) { return rules((err && err.message) || "failed"); });
   }
 
   var LINES = { FLAT_REACT: FLAT_REACT, LOW_REACT: LOW_REACT, GENERIC_REACT: GENERIC_REACT, FLAT_TEASE: FLAT_TEASE, KEYWORDS: KEYWORDS, CALLBACKS: CALLBACKS };
@@ -2376,7 +2414,7 @@
                     "chat-date": "Chat · Date", "chat-party": "Chat · Party", "chat-interview": "Chat · Interview" };
 
   var HKEY = "charismaPractice.history.v1", LKEY = "charismaPractice.lang", MKEY = "charismaPractice.mode",
-      MUTEKEY = "charismaPractice.mute", GKEY = "charismaPractice.geminiKey", GMKEY = "charismaPractice.geminiModel",
+      MUTEKEY = "charismaPractice.mute", GKEY = "charismaPractice.geminiKey", GMKEY = "charismaPractice.geminiModel", GLASTKEY = "charismaPractice.geminiLastGoodModel",
       HFKEY = "charismaPractice.handsFree", TMKEY = "charismaPractice.talkMode",
       SILKEY = "charismaPractice.silence", SORKEY = "charismaPractice.sendOnRelease",
       CLKEY = "charismaPractice.coachLevel", CVKEY = "charismaPractice.coachVoice";
@@ -2866,8 +2904,9 @@
     var coachP = early ? wait(350).then(function () { return show(ruleCard); }) : Promise.resolve();
     updateMood();
     var started = Date.now();
-    Chat.partnerReply(convo, a, { apiKey: key, model: lsGet(GMKEY) || Chat.GEMINI_MODELS[0], fetch: key ? window.fetch.bind(window) : null })
+    Chat.partnerReply(convo, a, { apiKey: key, model: lsGet(GLASTKEY) || lsGet(GMKEY) || Chat.GEMINI_MODELS[0], fetch: key ? window.fetch.bind(window) : null })
       .then(function (res) {
+        if (res.source === "gemini" && res.model) lsSet(GLASTKEY, res.model);   // remember the model that worked
         if (t.undone) return;
         return coachP.then(function () {
           if (!shown) return show(key ? Coach.merge(ruleCard, Coach.fromGemini(res.coachObj), level) : ruleCard);
@@ -2878,7 +2917,9 @@
             if (t.undone) return;
             t.typing.remove();
             if (!convo || convo.ended) return;
-            if (res.error) showGNotice("Smart replies didn't work (" + res.error + "). Using the free built-in replies for now.");
+            if (res.keyError) showGNotice("Your Gemini API key is not valid. Check it in Settings. Using the free built-in replies for now.");
+            else if (res.busy) showGNotice("Smart replies are busy right now, using basic replies.");
+            else if (res.error) showGNotice("Smart replies didn't work (" + res.error + "). Using the free built-in replies for now.");
             else if (res.source === "gemini") hideGNotice();
             if (res.coach) { var c = document.createElement("div"); c.className = "vline tip2"; c.textContent = "💡 " + res.coach; row.appendChild(c); }
             t.reply = partnerSays(res.text);
@@ -3066,7 +3107,7 @@
   $("gSave").addEventListener("click", function () {
     var k = $("gKey").value.trim();
     if (k) lsSet(GKEY, k);
-    lsSet(GMKEY, $("gModel").value);
+    lsSet(GMKEY, $("gModel").value); lsSet(GLASTKEY, null);
     renderSettings(); hideGNotice();
   });
   $("gRemove").addEventListener("click", function () { lsSet(GKEY, null); renderSettings(); hideGNotice(); });
